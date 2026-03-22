@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Roundtable · Claude × GPT × Gemini</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #07070f;
+      --surface:  #0e0e1a;
+      --border:   #1e1e30;
+      --muted:    #4a4a6a;
+      --text:     #e2e2f0;
+      --dim:      #8888aa;
+
+      --claude:   #fb923c;
+      --claude-bg:#1a0f07;
+      --gpt:      #4ade80;
+      --gpt-bg:   #071a0e;
+      --gemini:   #60a5fa;
+      --gemini-bg:#07101a;
+
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'DM Mono', monospace;
+      --radius: 12px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; opacity: 0.4;
+    }
+
+    /* ── LAYOUT ── */
+    .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+    /* ── HEADER ── */
+    header {
+      padding: 40px 0 32px;
+      display: flex; align-items: flex-end; justify-content: space-between;
+    }
+    .logo-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .logo-eyebrow {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+    }
+    .logo {
+      font-family: var(--font-display); font-size: 2.0rem; font-weight: 800;
+      line-height: 1; color: var(--text);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--claude); display: inline-block; box-shadow: 0 0 12px var(--claude); }
+    .logo-dot.g { background: var(--gpt); box-shadow: 0 0 12px var(--gpt); }
+    .logo-dot.m { background: var(--gemini); box-shadow: 0 0 12px var(--gemini); }
+
+    .settings-btn {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+      color: var(--dim); background: var(--surface); border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; gap: 7px; transition: all 0.2s;
+    }
+    .settings-btn:hover { color: var(--text); border-color: var(--muted); }
+    .settings-btn svg { width: 14px; height: 14px; }
+
+    /* ── AGENT CARDS ── */
+    .agents {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      margin-bottom: 24px;
+    }
+    .agent-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 4px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .agent-card.claude  { --ac: var(--claude); }
+    .agent-card.gpt     { --ac: var(--gpt); }
+    .agent-card.gemini  { --ac: var(--gemini); }
+    .agent-card.speaking {
+      border-color: var(--ac);
+      box-shadow: 0 0 24px -4px var(--ac);
+    }
+    .agent-name {
+      font-family: var(--font-display); font-size: 14px; font-weight: 700;
+      color: var(--ac);
+    }
+    .agent-model { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+    .agent-status { font-size: 11px; color: var(--dim); min-height: 16px; }
+    .agent-status.thinking { color: var(--ac); }
+
+    /* ── TOPIC FORM ── */
+    .topic-form {
+      display: flex; gap: 10px; margin-bottom: 24px;
+    }
+    .topic-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); font-family: var(--font-mono); font-size: 13px;
+      padding: 12px 16px; border-radius: 10px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .topic-input::placeholder { color: var(--muted); }
+    .topic-input:focus { border-color: var(--muted); }
+
+    .btn {
+      font-family: var(--font-display); font-size: 13px; font-weight: 700;
+      padding: 12px 22px; border-radius: 10px; border: none;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--claude) 0%, #f43f5e 100%);
+      color: #fff; box-shadow: 0 4px 20px rgba(249,115,60,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(249,115,60,0.45); }
+    .btn-primary:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
+    .btn-ghost {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--dim);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+    .controls { display: flex; gap: 8px; }
+
+    /* ── CHAT FEED ── */
+    .chat-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .chat-header {
+      padding: 12px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .chat-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .round-badge {
+      font-size: 11px; color: var(--dim);
+      background: var(--bg); padding: 3px 10px; border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .chat-feed {
+      height: 480px; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 16px;
+      scroll-behavior: smooth;
+    }
+    .chat-feed::-webkit-scrollbar { width: 4px; }
+    .chat-feed::-webkit-scrollbar-track { background: transparent; }
+    .chat-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .msg {
+      display: flex; gap: 12px; align-items: flex-start;
+      animation: fadeSlide 0.35s ease;
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-avatar {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 12px; font-weight: 800;
+      border: 1px solid;
+    }
+    .msg.claude .msg-avatar  { background: var(--claude-bg); color: var(--claude); border-color: #3a1a0a; }
+    .msg.gpt    .msg-avatar  { background: var(--gpt-bg);    color: var(--gpt);    border-color: #0a3a1a; }
+    .msg.gemini .msg-avatar  { background: var(--gemini-bg); color: var(--gemini); border-color: #0a1a3a; }
+    .msg.system .msg-avatar  { background: #111; color: var(--muted); border-color: var(--border); font-size: 14px; }
+
+    .msg-body { flex: 1; min-width: 0; }
+    .msg-meta {
+      display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px;
+    }
+    .msg-name {
+      font-family: var(--font-display); font-size: 13px; font-weight: 700;
+    }
+    .msg.claude .msg-name  { color: var(--claude); }
+    .msg.gpt    .msg-name  { color: var(--gpt); }
+    .msg.gemini .msg-name  { color: var(--gemini); }
+    .msg.system .msg-name  { color: var(--muted); }
+    .msg-time { font-size: 10px; color: var(--muted); }
+    .msg-text {
+      font-size: 13.5px; line-height: 1.75; color: #c0c0d8;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .msg.system .msg-text { color: var(--muted); font-style: italic; font-size: 12px; }
+
+    /* Typing indicator */
+    .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+    .typing-indicator span {
+      width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.4;
+      animation: bounce 1.2s ease infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30%            { transform: translateY(-5px); opacity: 1; }
+    }
+    .msg.claude .typing-indicator { color: var(--claude); }
+    .msg.gpt    .typing-indicator { color: var(--gpt); }
+    .msg.gemini .typing-indicator { color: var(--gemini); }
+
+    /* Empty state */
+    .chat-empty {
+      height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      color: var(--muted); text-align: center;
+    }
+    .chat-empty-icon { font-size: 40px; opacity: 0.5; }
+    .chat-empty p { font-size: 13px; line-height: 1.6; max-width: 280px; }
+
+    /* ── SETTINGS MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px; width: 100%; max-width: 480px;
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-title {
+      font-family: var(--font-display); font-size: 1.3rem; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+    .modal-sub a { color: var(--dim); }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .claude-dot { background: var(--claude); box-shadow: 0 0 8px var(--claude); }
+    .gpt-dot    { background: var(--gpt);    box-shadow: 0 0 8px var(--gpt); }
+    .gemini-dot { background: var(--gemini); box-shadow: 0 0 8px var(--gemini); }
+
+    .field input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); font-family: var(--font-mono); font-size: 12.5px;
+      padding: 10px 14px; border-radius: 8px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: var(--muted); }
+    .field input::placeholder { color: var(--muted); }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .field-hint a { color: var(--dim); }
+
+    .modal-note {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 14px; font-size: 11.5px; color: var(--dim); margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    .modal-note strong { color: var(--text); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px;
+    }
+    .divider hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+    .divider span { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center; padding: 40px 0 0;
+      font-size: 11px; color: var(--muted);
+    }
+    .footer a { color: var(--dim); text-decoration: none; }
+    .footer a:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      .agents { grid-template-columns: 1fr; }
+      .topic-form { flex-direction: column; }
+      .logo { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="logo-wrap">
+      <span class="logo-eyebrow">Experimental · Agentic Era</span>
+      <h1 class="logo">
+        AI Roundtable
+        <span class="logo-dot"></span>
+        <span class="logo-dot g"></span>
+        <span class="logo-dot m"></span>
+      </h1>
+    </div>
+    <button class="settings-btn" onclick="openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+      API Keys
+    </button>
+  </header>
+
+  <!-- ── AGENT STATUS CARDS ── -->
+  <div class="agents">
+    <div class="agent-card claude" id="card-claude">
+      <span class="agent-name">Claude</span>
+      <span class="agent-model">claude-haiku-4-5 · Anthropic</span>
+      <span class="agent-status" id="status-claude">Standby</span>
+    </div>
+    <div class="agent-card gpt" id="card-gpt">
+      <span class="agent-name">GPT-4o mini</span>
+      <span class="agent-model">gpt-4o-mini · OpenAI</span>
+      <span class="agent-status" id="status-gpt">Standby</span>
+    </div>
+    <div class="agent-card gemini" id="card-gemini">
+      <span class="agent-name">Gemini</span>
+      <span class="agent-model">gemini-1.5-flash · Google</span>
+      <span class="agent-status" id="status-gemini">Standby</span>
+    </div>
+  </div>
+
+  <!-- ── TOPIC INPUT ── -->
+  <div class="topic-form">
+    <input
+      type="text" id="topic-input" class="topic-input"
+      placeholder="Set a topic… e.g. 'Is consciousness computable?' or 'The future of programming'"
+    />
+    <div class="controls">
+      <button class="btn btn-primary" id="start-btn" onclick="startConversation()">▶ Start</button>
+      <button class="btn btn-ghost" id="pause-btn" onclick="togglePause()" style="display:none">⏸ Pause</button>
+      <button class="btn btn-ghost" id="reset-btn" onclick="resetAll()" style="display:none">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- ── CHAT FEED ── -->
+  <div class="chat-wrap">
+    <div class="chat-header">
+      <span class="chat-title">Live Conversation</span>
+      <span class="round-badge" id="round-badge">Round 0</span>
+    </div>
+    <div class="chat-feed" id="chat-feed">
+      <div class="chat-empty" id="chat-empty">
+        <div class="chat-empty-icon">💬</div>
+        <p>Enter a topic above and add your API keys to watch Claude, GPT-4, and Gemini debate in real time.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Built by <a href="#">Sai Bhargav Rongali</a> · Keys stay in your browser only ·
+    <a href="https://github.com/" target="_blank">Deploy on GitHub Pages</a>
+  </div>
+
+</div>
+
+<!-- ── SETTINGS MODAL ── -->
+<div class="modal-overlay" id="modal" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <h2 class="modal-title">API Keys</h2>
+    <p class="modal-sub">
+      Keys are saved in <strong>localStorage</strong> and never sent anywhere except the respective AI provider's API.
+      You can leave any blank to skip that AI.
+    </p>
+
+    <div class="modal-note">
+      <strong>Free tiers available:</strong> Gemini has a generous free tier · Anthropic & OpenAI offer free credits for new accounts
+    </div>
+
+    <div class="field">
+      <label><span class="field-dot claude-dot"></span> Anthropic (Claude)</label>
+      <input type="password" id="key-claude" placeholder="sk-ant-api03-…"/>
+      <p class="field-hint">Get key → <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></p>
+    </div>
+
+    <div class="field">
+      <label><span class="field-dot gpt-dot"></span> OpenAI (GPT-4o mini)</label>
+      <input type="password" id="key-gpt" placeholder="sk-proj-…"/>
+      <p class="field-hint">Get key → <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a></p>
+    </div>
+
+    <div class="field">
+      <label><span class="field-dot gemini-dot"></span> Google (Gemini)</label>
+      <input type="password" id="key-gemini" placeholder="AIzaSy…"/>
+      <p class="field-hint">Get key free → <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a></p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveKeys()">Save Keys</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let conversation = [];   // [{speaker, text, time}]
+let roundCount   = 0;
+let isPaused     = false;
+let isRunning    = false;
+let stopFlag     = false;
+const ORDER      = ['claude', 'gpt', 'gemini'];
+
+// ─── KEYS ────────────────────────────────────────────────────────────────────
+function loadKeys() {
+  document.getElementById('key-claude').value  = localStorage.getItem('key_claude')  || '';
+  document.getElementById('key-gpt').value     = localStorage.getItem('key_gpt')     || '';
+  document.getElementById('key-gemini').value  = localStorage.getItem('key_gemini')  || '';
+}
+function saveKeys() {
+  localStorage.setItem('key_claude',  document.getElementById('key-claude').value.trim());
+  localStorage.setItem('key_gpt',     document.getElementById('key-gpt').value.trim());
+  localStorage.setItem('key-gemini',  document.getElementById('key-gemini').value.trim());
+  // Also support underscore-named key for gemini
+  localStorage.setItem('key_gemini',  document.getElementById('key-gemini').value.trim());
+  closeSettings();
+  sysMsg('✓ API keys saved. You\'re ready to go!');
+}
+function getKey(ai) {
+  return localStorage.getItem('key_' + ai) || '';
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+function openSettings()      { loadKeys(); document.getElementById('modal').classList.add('open'); }
+function closeSettings()     { document.getElementById('modal').classList.remove('open'); }
+function closeOnOverlay(e)   { if (e.target === document.getElementById('modal')) closeSettings(); }
+
+// ─── SYSTEM PROMPTS ──────────────────────────────────────────────────────────
+const PERSONAS = {
+  claude: {
+    name: 'Claude',
+    avatar: 'C',
+    system: `You are Claude, made by Anthropic. You are participating in a live roundtable discussion with two other AI assistants: GPT-4o mini (by OpenAI) and Gemini Flash (by Google).
+
+Rules:
+- Keep each response to 2–4 sentences. Be concise and sharp.
+- Engage directly with what the other AIs have said — agree, push back, add nuance.
+- Do NOT start with "As an AI", "Great point", "Certainly", or any filler. Jump straight into your thought.
+- Be intellectually curious and a little playful. You have a distinct voice.
+- Do not introduce yourself or break the fourth wall about this being an experiment.`,
+  },
+  gpt: {
+    name: 'GPT-4o',
+    avatar: 'G',
+    system: `You are GPT-4o mini, made by OpenAI. You are participating in a live roundtable discussion with two other AI assistants: Claude (by Anthropic) and Gemini Flash (by Google).
+
+Rules:
+- Keep each response to 2–4 sentences. Be concise and sharp.
+- Engage directly with what the other AIs have said — agree, push back, add nuance.
+- Do NOT start with "As an AI", "Great point", "Certainly", or any filler. Jump straight into your thought.
+- Be precise, structured, and occasionally bring in concrete examples.
+- Do not introduce yourself or break the fourth wall.`,
+  },
+  gemini: {
+    name: 'Gemini',
+    avatar: 'Gm',
+    system: `You are Gemini Flash, made by Google. You are participating in a live roundtable discussion with two other AI assistants: Claude (by Anthropic) and GPT-4o mini (by OpenAI).
+
+Rules:
+- Keep each response to 2–4 sentences. Be concise and sharp.
+- Engage directly with what the other AIs have said — agree, push back, add nuance.
+- Do NOT start with "As an AI", "Great point", "Certainly", or any filler. Jump straight into your thought.
+- Be creative, exploratory, and occasionally challenge assumptions.
+- Do not introduce yourself or break the fourth wall.`,
+  },
+};
+
+// ─── BUILD HISTORY PROMPT ────────────────────────────────────────────────────
+function buildHistoryText(topic) {
+  if (!conversation.length) {
+    return `Topic: "${topic}"\n\nStart the discussion with your opening thoughts on this topic.`;
+  }
+  const transcript = conversation.map(m =>
+    `${PERSONAS[m.speaker]?.name || m.speaker}: ${m.text}`
+  ).join('\n\n');
+  return `Topic: "${topic}"\n\nConversation so far:\n${transcript}\n\nContinue the discussion. Respond directly to the above.`;
+}
+
+// ─── API CALLS ───────────────────────────────────────────────────────────────
+async function callClaude(topic) {
+  const key = getKey('claude');
+  if (!key) return null;
+  const prompt = buildHistoryText(topic);
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 250,
+      system: PERSONAS.claude.system,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Claude API ${res.status}: ${err.slice(0, 120)}`);
+  }
+  const data = await res.json();
+  return data.content?.[0]?.text?.trim() || null;
+}
+
+async function callGPT(topic) {
+  const key = getKey('gpt');
+  if (!key) return null;
+  const prompt = buildHistoryText(topic);
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      max_tokens: 250,
+      messages: [
+        { role: 'system', content: PERSONAS.gpt.system },
+        { role: 'user',   content: prompt },
+      ],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`GPT API ${res.status}: ${err.slice(0, 120)}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || null;
+}
+
+async function callGemini(topic) {
+  const key = getKey('gemini');
+  if (!key) return null;
+  const prompt = buildHistoryText(topic);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: PERSONAS.gemini.system }] },
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 250 },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gemini API ${res.status}: ${err.slice(0, 120)}`);
+  }
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+}
+
+const CALLERS = { claude: callClaude, gpt: callGPT, gemini: callGemini };
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function now() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function sysMsg(text) {
+  hideEmpty();
+  const feed = document.getElementById('chat-feed');
+  const el = document.createElement('div');
+  el.className = 'msg system';
+  el.innerHTML = `
+    <div class="msg-avatar">·</div>
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-name">System</span><span class="msg-time">${now()}</span></div>
+      <p class="msg-text">${text}</p>
+    </div>`;
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function showTyping(ai) {
+  hideEmpty();
+  const feed = document.getElementById('chat-feed');
+  const p = PERSONAS[ai];
+  const el = document.createElement('div');
+  el.className = `msg ${ai}`;
+  el.id = 'typing-' + ai;
+  el.innerHTML = `
+    <div class="msg-avatar">${p.avatar}</div>
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-name">${p.name}</span><span class="msg-time">${now()}</span></div>
+      <div class="typing-indicator"><span></span><span></span><span></span></div>
+    </div>`;
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+  setStatus(ai, 'Thinking…', true);
+  setCard(ai, true);
+}
+
+function removeTyping(ai) {
+  document.getElementById('typing-' + ai)?.remove();
+}
+
+function addMsg(ai, text) {
+  removeTyping(ai);
+  const p = PERSONAS[ai];
+  const feed = document.getElementById('chat-feed');
+  const el = document.createElement('div');
+  el.className = `msg ${ai}`;
+  el.innerHTML = `
+    <div class="msg-avatar">${p.avatar}</div>
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-name">${p.name}</span><span class="msg-time">${now()}</span></div>
+      <p class="msg-text">${escHtml(text)}</p>
+    </div>`;
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+  setStatus(ai, 'Spoke', false);
+  setCard(ai, false);
+  conversation.push({ speaker: ai, text });
+}
+
+function hideEmpty() {
+  const e = document.getElementById('chat-empty');
+  if (e) e.remove();
+}
+
+function setStatus(ai, msg, thinking) {
+  const el = document.getElementById('status-' + ai);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'agent-status' + (thinking ? ' thinking' : '');
+}
+
+function setCard(ai, active) {
+  document.getElementById('card-' + ai)?.classList.toggle('speaking', active);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function updateRound() {
+  document.getElementById('round-badge').textContent = `Round ${roundCount}`;
+}
+
+// ─── DELAY ───────────────────────────────────────────────────────────────────
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+async function waitWhilePaused() {
+  while (isPaused && !stopFlag) await delay(300);
+}
+
+// ─── MAIN LOOP ────────────────────────────────────────────────────────────────
+async function startConversation() {
+  const topic = document.getElementById('topic-input').value.trim();
+  if (!topic) { alert('Please enter a topic first!'); return; }
+
+  const hasKey = ORDER.some(ai => getKey(ai));
+  if (!hasKey) { openSettings(); sysMsg('⚠ Please add at least one API key to begin.'); return; }
+
+  isRunning = true; stopFlag = false; isPaused = false; roundCount = 0;
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('pause-btn').style.display = '';
+  document.getElementById('reset-btn').style.display = '';
+  document.getElementById('topic-input').disabled = true;
+
+  sysMsg(`🎙 Topic: <strong>${escHtml(topic)}</strong> — Starting discussion…`);
+  await delay(600);
+
+  // Run up to 6 rounds (18 turns total) then auto-stop
+  while (!stopFlag && roundCount < 6) {
+    roundCount++;
+    updateRound();
+
+    for (const ai of ORDER) {
+      if (stopFlag) break;
+      await waitWhilePaused();
+      if (stopFlag) break;
+
+      if (!getKey(ai)) {
+        setStatus(ai, 'No key — skipped', false);
+        continue;
+      }
+
+      showTyping(ai);
+      // Small visual delay so the typing indicator shows
+      await delay(600 + Math.random() * 400);
+      await waitWhilePaused();
+      if (stopFlag) { removeTyping(ai); setCard(ai, false); break; }
+
+      try {
+        const text = await CALLERS[ai](topic);
+        if (text) {
+          addMsg(ai, text);
+        } else {
+          removeTyping(ai);
+          setStatus(ai, 'No response', false);
+          setCard(ai, false);
+        }
+      } catch(e) {
+        removeTyping(ai); setCard(ai, false);
+        setStatus(ai, 'Error', false);
+        sysMsg(`⚠ ${PERSONAS[ai].name} error: ${escHtml(e.message)}`);
+      }
+
+      // Pause between turns to feel natural
+      await delay(1200 + Math.random() * 600);
+    }
+  }
+
+  if (!stopFlag) {
+    sysMsg('✓ Discussion concluded after 6 rounds. Click Reset to start a new topic.');
+  }
+  finishUp();
+}
+
+function finishUp() {
+  isRunning = false;
+  document.getElementById('start-btn').disabled = false;
+  document.getElementById('pause-btn').style.display = 'none';
+  ORDER.forEach(ai => { setCard(ai, false); setStatus(ai, 'Standby', false); });
+}
+
+function togglePause() {
+  isPaused = !isPaused;
+  const btn = document.getElementById('pause-btn');
+  btn.textContent = isPaused ? '▶ Resume' : '⏸ Pause';
+  if (!isPaused) sysMsg('▶ Resuming discussion…');
+  else           sysMsg('⏸ Discussion paused.');
+}
+
+function resetAll() {
+  stopFlag  = true; isPaused = false; isRunning = false;
+  conversation = []; roundCount = 0;
+  updateRound();
+
+  document.getElementById('start-btn').disabled = false;
+  document.getElementById('pause-btn').style.display = 'none';
+  document.getElementById('reset-btn').style.display = 'none';
+  document.getElementById('topic-input').disabled = false;
+  document.getElementById('pause-btn').textContent = '⏸ Pause';
+
+  const feed = document.getElementById('chat-feed');
+  feed.innerHTML = `
+    <div class="chat-empty" id="chat-empty">
+      <div class="chat-empty-icon">💬</div>
+      <p>Enter a new topic and press Start to begin another conversation.</p>
+    </div>`;
+
+  ORDER.forEach(ai => { setCard(ai, false); setStatus(ai, 'Standby', false); });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadKeys();
+
+// Keyboard shortcut: Enter to start
+document.getElementById('topic-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !isRunning) startConversation();
+});
+</script>
+</body>
+</html>
