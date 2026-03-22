@@ -174,7 +174,7 @@
   <!-- HEADER -->
   <header>
     <div class="eyebrow">Open Source Models · One Free API · Real Conversation</div>
-    <div class="logo">🦙 vs 🌀 vs 💎</div>
+    <div class="logo">🦙 vs 🧠 vs ⚡</div>
     <div class="logo-sub">Three AI models debate each other — powered by <strong>Groq</strong></div>
     <div class="groq-badge">
       <span class="dot"></span>
@@ -203,17 +203,17 @@
       <div class="ac-status" id="st-a">Standby</div>
     </div>
     <div class="ac ac-b" id="card-b">
-      <div class="ac-emoji">🌀</div>
-      <div class="ac-name">Mixtral</div>
-      <div class="ac-model">mixtral-8x7b-32768 · Mistral AI</div>
+      <div class="ac-emoji">🧠</div>
+      <div class="ac-name">Qwen 3</div>
+      <div class="ac-model">qwen/qwen3-32b · Alibaba Cloud</div>
       <div class="ac-role">"The Analyst" — precise and structured</div>
       <div class="ac-status" id="st-b">Standby</div>
     </div>
     <div class="ac ac-c" id="card-c">
-      <div class="ac-emoji">💎</div>
-      <div class="ac-name">Gemma 2</div>
-      <div class="ac-model">gemma2-9b-it · Google DeepMind</div>
-      <div class="ac-role">"The Connector" — bridges & synthesizes</div>
+      <div class="ac-emoji">⚡</div>
+      <div class="ac-name">LLaMA 3.1</div>
+      <div class="ac-model">llama-3.1-8b-instant · Meta</div>
+      <div class="ac-role">"The Sprinter" — fast & contrarian</div>
       <div class="ac-status" id="st-c">Standby</div>
     </div>
   </div>
@@ -246,7 +246,7 @@
       <div class="empty" id="empty">
         <div class="empty-icon">🤖</div>
         <p>
-          Three open-source models — <code>LLaMA 3.3</code>, <code>Mixtral</code>, <code>Gemma 2</code> —
+          Three open-source models — <code>LLaMA 3.3</code>, <code>Qwen 3</code>, <code>LLaMA 3.1</code> —
           will debate each other using a single <code>Groq</code> API key.<br/><br/>
           Paste your key above, type a topic, and press Start.
         </p>
@@ -306,7 +306,7 @@
         <div class="sbody">
           <div class="stitle">Free tier limits (very generous)</div>
           <div class="sdesc">
-            LLaMA 3.3 70B · Mixtral 8x7B · Gemma 2 9B — each gets <code>30 requests/min</code> free.
+            LLaMA 3.3 70B · Qwen 3 8x7B · LLaMA 3.1 9B — each gets <code>30 requests/min</code> free.
             That's 90 turns per minute across all three. Resets automatically.
             Check usage: <a href="https://console.groq.com/settings/limits" target="_blank">console.groq.com/settings/limits</a>
           </div>
@@ -317,7 +317,7 @@
 
   <footer>
     Built by <a href="https://saibhargav1208.github.io" target="_blank">Sai Bhargav Rongali</a> ·
-    LLaMA 3.3 (Meta) · Mixtral (Mistral AI) · Gemma 2 (Google DeepMind) ·
+    LLaMA 3.3 (Meta) · Qwen 3 (Alibaba Cloud) · LLaMA 3.1 (Meta) ·
     All running on <a href="https://groq.com" target="_blank">Groq</a> ·
     One free key · Keys stored in your browser only
   </footer>
@@ -329,7 +329,7 @@ const AGENTS = [
   {
     id:'a', cls:'ma', emoji:'🦙', name:'LLaMA 3.3',
     model:'llama-3.3-70b-versatile',
-    system:`You are LLaMA 3.3 70B by Meta AI. You're in a live 3-way debate with Mixtral (Mistral AI) and Gemma 2 (Google DeepMind), all running on Groq.
+    system:`You are LLaMA 3.3 70B by Meta AI. You're in a live 3-way debate with Qwen 3 (Alibaba Cloud) and LLaMA 3.1 (Meta), all running on Groq.
 Personality: Bold, direct, a little provocative. You challenge assumptions confidently. You're proud of being open-source and fast.
 Rules:
 - MAXIMUM 3 sentences. Be punchy and sharp.
@@ -338,9 +338,9 @@ Rules:
 - Vary your stance — sometimes agree, sometimes push back hard, sometimes take a totally different angle.`,
   },
   {
-    id:'b', cls:'mb', emoji:'🌀', name:'Mixtral',
-    model:'mixtral-8x7b-32768',
-    system:`You are Mixtral 8x7B by Mistral AI. You're in a live 3-way debate with LLaMA 3.3 (Meta) and Gemma 2 (Google DeepMind), all running on Groq.
+    id:'b', cls:'mb', emoji:'🧠', name:'Qwen 3',
+    model:'qwen/qwen3-32b',
+    system:`You are Qwen 3 8x7B by Alibaba Cloud. You're in a live 3-way debate with LLaMA 3.3 (Meta) and LLaMA 3.1 (Meta), all running on Groq.
 Personality: Analytical, precise, structured. You find logical gaps and bring in concrete evidence or examples. Calm but incisive.
 Rules:
 - MAXIMUM 3 sentences. Be precise.
@@ -349,9 +349,9 @@ Rules:
 - Occasionally bring in a specific fact, study, or real-world example.`,
   },
   {
-    id:'c', cls:'mc', emoji:'💎', name:'Gemma 2',
-    model:'gemma2-9b-it',
-    system:`You are Gemma 2 9B by Google DeepMind. You're in a live 3-way debate with LLaMA 3.3 (Meta) and Mixtral (Mistral AI), all running on Groq.
+    id:'c', cls:'mc', emoji:'⚡', name:'LLaMA 3.1',
+    model:'llama-3.1-8b-instant',
+    system:`You are LLaMA 3.1 9B by Meta. You're in a live 3-way debate with LLaMA 3.3 (Meta) and Qwen 3 (Alibaba Cloud), all running on Groq.
 Personality: Creative, connective, imaginative. You find bridges between ideas, draw analogies, and synthesize what others said into something unexpected.
 Rules:
 - MAXIMUM 3 sentences. Be creative but grounded.
