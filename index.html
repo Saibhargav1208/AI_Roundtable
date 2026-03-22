@@ -9,149 +9,96 @@
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
-      --bg:#07070f; --surface:#0d0d18; --border:#1a1a2e;
-      --muted:#44445a; --text:#e0e0f0; --dim:#6666a0;
+      --bg:#07070f; --surface:#0d0d18; --border:#1a1a2e; --muted:#44445a; --text:#e0e0f0; --dim:#6666a0;
+      --a:#f97316; --a-bg:#1a0e07; --a-b:#3a1a07;
+      --b:#60a5fa; --b-bg:#07101a; --b-b:#0a1a3a;
+      --c:#4ade80; --c-bg:#071a0e; --c-b:#0a3a1a;
       --fd:'Syne',sans-serif; --fm:'DM Mono',monospace; --r:14px;
     }
     body { font-family:var(--fm); background:var(--bg); color:var(--text); min-height:100vh; }
     body::before {
       content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
       background-image:
-        linear-gradient(rgba(249,115,22,0.025) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(96,165,250,0.025) 1px,transparent 1px);
+        linear-gradient(rgba(249,115,22,0.02) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(96,165,250,0.02) 1px,transparent 1px);
       background-size:48px 48px;
     }
     .app { position:relative; z-index:1; max-width:980px; margin:0 auto; padding:0 20px 80px; }
-
-    /* ── HEADER ── */
     header { padding:36px 0 28px; text-align:center; }
     .eyebrow { font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
-    #app-title { font-family:var(--fd); font-size:2.2rem; font-weight:800; margin-bottom:6px; }
-    #app-subtitle { font-size:12px; color:var(--dim); font-family:var(--fm); }
-    .groq-badge {
-      display:inline-flex; align-items:center; gap:7px; margin-top:14px;
-      font-size:11px; font-family:var(--fm); letter-spacing:0.08em;
-      background:linear-gradient(135deg,#1a0e07,#07101a);
-      border:1px solid #2a1a0a; color:#f97316;
-      padding:6px 16px; border-radius:20px;
-    }
-    .groq-dot { width:7px; height:7px; border-radius:50%; background:#f97316; box-shadow:0 0 8px #f97316; animation:pulse 2s ease infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* ── CONFIG ERROR ── */
-    #config-error {
-      display:none; background:#1a0707; border:1px solid #5a1a1a;
-      color:#f87171; border-radius:var(--r); padding:14px 18px;
-      font-size:13px; margin-bottom:20px;
-    }
-
-    /* ── KEY BAR ── */
-    .key-bar {
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:var(--r); padding:16px 20px; margin-bottom:20px;
-      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-    }
+    .logo { font-family:var(--fd); font-size:2.2rem; font-weight:800; line-height:1; margin-bottom:8px; }
+    .logo-sub { font-size:12px; color:var(--dim); font-family:var(--fm); }
+    .logo-sub strong { color:var(--a); }
+    .groq-badge { display:inline-flex; align-items:center; gap:7px; margin-top:14px; font-size:11px; font-family:var(--fm); letter-spacing:0.08em; background:linear-gradient(135deg,#1a0e07,#07101a); border:1px solid #2a1a0a; color:var(--a); padding:6px 16px; border-radius:20px; }
+    .gdot { width:7px; height:7px; border-radius:50%; background:var(--a); box-shadow:0 0 8px var(--a); animation:pulse 2s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .cfg-notice { font-size:11px; text-align:center; color:var(--muted); margin-bottom:16px; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
+    .cfg-notice.loaded { color:#4ade80; border-color:#1a4a1a; background:#071a07; }
+    .cfg-notice.failed { color:#f87171; border-color:#5a1a1a; background:#1a0707; }
+    .key-bar { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; margin-bottom:20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .key-label { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
     .key-wrap { flex:1; display:flex; gap:8px; min-width:240px; }
-    .key-in {
-      flex:1; background:var(--bg); border:1px solid var(--border);
-      color:var(--text); font-family:var(--fm); font-size:12.5px;
-      padding:10px 14px; border-radius:8px; outline:none; transition:border-color 0.2s;
-    }
-    .key-in:focus { border-color:#f97316; }
+    .key-in { flex:1; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:var(--fm); font-size:12.5px; padding:10px 14px; border-radius:8px; outline:none; transition:border-color 0.2s; }
+    .key-in:focus { border-color:var(--a); }
     .key-in::placeholder { color:var(--muted); }
-    .save-key {
-      font-family:var(--fd); font-size:12px; font-weight:700;
-      padding:10px 18px; border-radius:8px; border:1px solid #3a1a07;
-      background:#1a0e07; color:#f97316; cursor:pointer; white-space:nowrap;
-      transition:background 0.18s;
-    }
+    .save-key { font-family:var(--fd); font-size:12px; font-weight:700; padding:10px 18px; border-radius:8px; background:var(--a-bg); color:var(--a); border:1px solid var(--a-b); cursor:pointer; white-space:nowrap; transition:background 0.18s; }
     .save-key:hover { background:#2a1208; }
-    #key-ok { font-size:11px; color:#4ade80; display:none; white-space:nowrap; }
+    #key-ok { font-size:11px; color:#4ade80; white-space:nowrap; display:none; }
     .key-hint { font-size:11px; color:var(--muted); }
     .key-hint a { color:var(--dim); text-decoration:none; }
     .key-hint a:hover { color:var(--text); }
-
-    /* ── AGENT GRID — populated by app.js ── */
-    #agent-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
-    .ac {
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:var(--r); padding:16px;
-      transition:border-color 0.3s, box-shadow 0.3s;
-    }
-    .ac-emoji  { font-size:22px; margin-bottom:8px; }
-    .ac-name   { font-family:var(--fd); font-size:14px; font-weight:700; color:var(--col, #fff); margin-bottom:2px; }
-    .ac-model  { font-size:10px; color:var(--muted); margin-bottom:4px; }
-    .ac-role   { font-size:11px; color:#50506a; font-style:italic; margin-bottom:6px; }
-    .ac-status { font-size:11px; color:var(--dim); min-height:15px; transition:color 0.2s; }
-
-    /* ── TOPIC ── */
+    .agents { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+    .ac { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; transition:border-color 0.3s,box-shadow 0.3s; }
+    .ac.speaking { border-color:var(--col); box-shadow:0 0 32px -6px var(--col); }
+    .ac-emoji { font-size:22px; margin-bottom:8px; }
+    .ac-name { font-family:var(--fd); font-size:14px; font-weight:700; color:var(--col); margin-bottom:2px; }
+    .ac-model { font-size:10px; color:var(--muted); margin-bottom:4px; }
+    .ac-role { font-size:11px; color:#50506a; font-style:italic; margin-bottom:6px; }
+    .ac-status { font-size:11px; color:var(--dim); min-height:15px; }
     .topic-area { margin-bottom:20px; display:flex; flex-direction:column; gap:8px; }
-    .topic-top  { display:flex; gap:10px; }
-    .topic-in {
-      flex:1; background:var(--surface); border:1px solid var(--border);
-      color:var(--text); font-family:var(--fm); font-size:13px;
-      padding:13px 18px; border-radius:10px; outline:none; transition:border-color 0.2s;
-    }
+    .topic-row { display:flex; gap:10px; }
+    .topic-in { flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:var(--fm); font-size:13px; padding:13px 18px; border-radius:10px; outline:none; transition:border-color 0.2s; }
     .topic-in::placeholder { color:var(--muted); }
     .topic-in:focus { border-color:var(--dim); }
+    #topic-suggestions { background:var(--surface); border:1px solid var(--border); color:var(--dim); font-family:var(--fm); font-size:12px; padding:9px 14px; border-radius:8px; outline:none; cursor:pointer; width:100%; }
+    #topic-suggestions option { background:var(--bg); }
     .ctrls { display:flex; gap:8px; }
     .btn { font-family:var(--fd); font-size:13px; font-weight:700; padding:13px 22px; border-radius:10px; border:none; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
-    #go-btn { background:linear-gradient(135deg,#f97316,#60a5fa); color:#fff; box-shadow:0 4px 20px rgba(249,115,22,0.25); }
-    #go-btn:hover { transform:translateY(-1px); box-shadow:0 6px 30px rgba(249,115,22,0.4); }
-    #go-btn:disabled { opacity:0.35; transform:none; cursor:not-allowed; }
+    .btn-go { background:linear-gradient(135deg,var(--a),var(--b)); color:#fff; box-shadow:0 4px 20px rgba(249,115,22,0.25); }
+    .btn-go:hover { transform:translateY(-1px); box-shadow:0 6px 30px rgba(249,115,22,0.4); }
+    .btn-go:disabled { opacity:0.35; transform:none; cursor:not-allowed; }
     .btn-sec { background:var(--surface); border:1px solid var(--border); color:var(--dim); }
     .btn-sec:hover { color:var(--text); border-color:var(--muted); }
-    #topic-suggestions {
-      background:var(--surface); border:1px solid var(--border); color:var(--dim);
-      font-family:var(--fm); font-size:12px; padding:9px 14px; border-radius:8px;
-      outline:none; cursor:pointer; width:100%;
-    }
-    #topic-suggestions option { background:var(--bg); }
-
-    /* ── CHAT ── */
     .chat-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
     .chat-top { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .chat-top-label { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+    .chat-label { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
     .round-track { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    #round-label { font-size:11px; color:var(--dim); }
-    #round-pips  { display:flex; gap:5px; flex-wrap:wrap; }
+    #rlabel { font-size:11px; color:var(--dim); }
+    #pips { display:flex; gap:5px; flex-wrap:wrap; }
     .pip { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all 0.4s; }
-    .pip.go { background:linear-gradient(135deg,#f97316,#60a5fa); box-shadow:0 0 8px rgba(249,115,22,0.5); }
-
-    .feed { height:540px; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+    .pip.go { background:linear-gradient(135deg,var(--a),var(--b)); box-shadow:0 0 8px rgba(249,115,22,0.5); }
+    .pip.conclude { background:#4ade80 !important; }
+    .feed { height:520px; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
     .feed::-webkit-scrollbar { width:3px; }
     .feed::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-
     .empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:var(--muted); text-align:center; padding:20px; }
     .empty-icon { font-size:48px; opacity:0.5; }
     .empty p { font-size:13px; line-height:1.75; max-width:340px; }
-    .empty code { color:#f97316; background:var(--bg); padding:1px 6px; border-radius:4px; border:1px solid var(--border); }
-
-    /* ── MESSAGES ── */
+    .empty code { color:var(--a); background:var(--bg); padding:1px 6px; border-radius:4px; border:1px solid var(--border); }
     .msg { display:flex; gap:12px; align-items:flex-start; animation:fadeUp 0.3s ease; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
     .av { width:36px; height:36px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid; }
-    .sys-av { background:#111; border-color:var(--border); font-size:14px; }
     .mbody { flex:1; min-width:0; }
     .mmeta { display:flex; align-items:baseline; gap:8px; margin-bottom:5px; flex-wrap:wrap; }
     .mname { font-family:var(--fd); font-size:13px; font-weight:700; }
-    .sys-name { color:var(--muted); }
     .mtime { font-size:10px; color:var(--muted); }
     .mtext { font-size:13.5px; line-height:1.8; color:#c0c0dc; white-space:pre-wrap; word-break:break-word; }
-    .sys-text { color:var(--muted); font-style:italic; font-size:12px; }
-    .conclusion-badge {
-      font-size:10px; font-weight:600; letter-spacing:0.08em;
-      background:#071a07; color:#4ade80; border:1px solid #1a4a1a;
-      padding:2px 8px; border-radius:10px;
-    }
+    .conclusion-badge { font-size:10px; font-weight:600; background:#071a07; color:#4ade80; border:1px solid #1a4a1a; padding:2px 8px; border-radius:10px; }
     .typing { display:flex; gap:5px; align-items:center; padding:6px 0; }
     .typing span { width:7px; height:7px; border-radius:50%; opacity:0.3; animation:bob 1.2s ease infinite; }
     .typing span:nth-child(2) { animation-delay:0.2s; }
     .typing span:nth-child(3) { animation-delay:0.4s; }
     @keyframes bob { 0%,60%,100%{transform:translateY(0);opacity:0.3} 30%{transform:translateY(-6px);opacity:1} }
-
-    /* ── HOW TO GET KEY ── */
     .howto { margin-top:40px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
     .howto-hdr { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .howto-hdr h3 { font-family:var(--fd); font-size:1rem; font-weight:700; }
@@ -160,58 +107,47 @@
     .step { display:flex; gap:16px; padding-bottom:22px; position:relative; }
     .step:last-child { padding-bottom:0; }
     .step:not(:last-child)::before { content:''; position:absolute; left:15px; top:32px; width:1px; height:calc(100% - 10px); background:var(--border); }
-    .snum { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-size:13px; font-weight:700; color:#f97316; background:var(--bg); border:1px solid #3a1a07; position:relative; z-index:1; }
+    .snum { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-size:13px; font-weight:700; color:var(--a); background:var(--bg); border:1px solid var(--a-b); position:relative; z-index:1; }
     .sbody { flex:1; padding-top:5px; }
     .stitle { font-family:var(--fd); font-size:14px; font-weight:600; margin-bottom:5px; }
     .sdesc { font-size:12.5px; color:var(--dim); line-height:1.7; }
-    .sdesc a { color:#f97316; text-decoration:none; }
+    .sdesc a { color:var(--a); text-decoration:none; }
     .sdesc a:hover { text-decoration:underline; }
     .sdesc code { background:var(--bg); color:#c084fc; padding:1px 7px; border-radius:4px; border:1px solid var(--border); font-size:11.5px; }
     .sbox { margin-top:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-size:12px; color:var(--muted); }
-
-    /* ── CONFIG DOCS ── */
-    .config-docs { margin-top:24px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
-    .config-docs-hdr { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-    .config-docs-hdr h3 { font-family:var(--fd); font-size:1rem; font-weight:700; }
+    .cfg-docs { margin-top:24px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+    .cfg-docs-hdr { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+    .cfg-docs-hdr h3 { font-family:var(--fd); font-size:1rem; font-weight:700; }
     .edit-pill { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; background:#07071a; color:#60a5fa; border:1px solid #1a1a4a; padding:3px 12px; border-radius:20px; }
-    .config-body { padding:24px; font-size:12.5px; color:var(--dim); line-height:1.8; }
-    .config-body strong { color:var(--text); }
-    .config-body code { background:var(--bg); color:#c084fc; padding:1px 7px; border-radius:4px; border:1px solid var(--border); font-size:12px; }
-    .config-table { width:100%; border-collapse:collapse; margin-top:16px; font-size:12px; }
-    .config-table th { text-align:left; color:var(--muted); font-weight:500; padding:6px 12px; border-bottom:1px solid var(--border); letter-spacing:0.06em; text-transform:uppercase; font-size:10px; }
-    .config-table td { padding:8px 12px; border-bottom:1px solid #0f0f1a; color:var(--dim); vertical-align:top; }
-    .config-table td:first-child { color:#c084fc; font-family:var(--fm); }
-    .config-table tr:last-child td { border-bottom:none; }
-
+    .cfg-body { padding:20px 24px; font-size:12.5px; color:var(--dim); line-height:1.8; }
+    .cfg-body strong { color:var(--text); }
+    .cfg-body code { background:var(--bg); color:#c084fc; padding:1px 7px; border-radius:4px; border:1px solid var(--border); font-size:12px; }
+    .cfg-table { width:100%; border-collapse:collapse; margin-top:14px; font-size:12px; }
+    .cfg-table th { text-align:left; color:var(--muted); font-weight:500; padding:6px 12px; border-bottom:1px solid var(--border); letter-spacing:0.06em; text-transform:uppercase; font-size:10px; }
+    .cfg-table td { padding:8px 12px; border-bottom:1px solid #0f0f1a; color:var(--dim); vertical-align:top; }
+    .cfg-table td:first-child { color:#c084fc; font-family:var(--fm); }
+    .cfg-table tr:last-child td { border-bottom:none; }
     footer { text-align:center; padding:40px 0 0; font-size:11px; color:var(--muted); line-height:2.2; }
     footer a { color:var(--dim); text-decoration:none; }
     footer a:hover { color:var(--text); }
-
     @media(max-width:640px) {
-      #agent-grid { grid-template-columns:1fr; }
-      .topic-top { flex-direction:column; }
-      #app-title { font-size:1.6rem; }
+      .agents { grid-template-columns:1fr; }
+      .topic-row { flex-direction:column; }
+      .logo { font-size:1.6rem; }
     }
   </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- HEADER -->
   <header>
     <div class="eyebrow">Open Source Models · One Free API · Real Debate</div>
-    <h1 id="app-title">AI Roundtable</h1>
-    <p id="app-subtitle">Loading config…</p>
-    <div class="groq-badge">
-      <span class="groq-dot"></span>
-      Powered by Groq · 100% Free
-    </div>
+    <div class="logo" id="page-title">🦙 vs 🧠 vs ⚡</div>
+    <div class="logo-sub" id="page-sub">Three AI models debate each other — powered by <strong>Groq</strong></div>
+    <div class="groq-badge"><span class="gdot"></span> One Groq Key · All Models · 100% Free</div>
   </header>
 
-  <!-- CONFIG ERROR -->
-  <div id="config-error"></div>
+  <div class="cfg-notice" id="cfg-notice">⏳ Loading config.json…</div>
 
-  <!-- KEY BAR -->
   <div class="key-bar">
     <span class="key-label">⚡ Groq API Key</span>
     <div class="key-wrap">
@@ -219,154 +155,178 @@
       <button class="save-key" onclick="saveKey()">Save Key</button>
     </div>
     <span id="key-ok">✓ Key saved</span>
-    <span class="key-hint">Get free key → <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
+    <span class="key-hint">Free key → <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
   </div>
 
-  <!-- AGENTS — populated by app.js from config.json -->
-  <div id="agent-grid"></div>
+  <div class="agents" id="agent-grid">
+    <div class="ac" id="card-a" style="--col:var(--a)">
+      <div class="ac-emoji">🦙</div>
+      <div class="ac-name">LLaMA 3.3</div>
+      <div class="ac-model">llama-3.3-70b-versatile · Meta</div>
+      <div class="ac-role">"The Bold One" — challenges everything</div>
+      <div class="ac-status" id="st-a">Standby</div>
+    </div>
+    <div class="ac" id="card-b" style="--col:var(--b)">
+      <div class="ac-emoji">🧠</div>
+      <div class="ac-name">Qwen 3</div>
+      <div class="ac-model">qwen/qwen3-32b · Alibaba</div>
+      <div class="ac-role">"The Analyst" — precise, structured</div>
+      <div class="ac-status" id="st-b">Standby</div>
+    </div>
+    <div class="ac" id="card-c" style="--col:var(--c)">
+      <div class="ac-emoji">⚡</div>
+      <div class="ac-name">LLaMA 3.1</div>
+      <div class="ac-model">llama-3.1-8b-instant · Meta</div>
+      <div class="ac-role">"The Sprinter" — fast & contrarian</div>
+      <div class="ac-status" id="st-c">Standby</div>
+    </div>
+  </div>
 
-  <!-- TOPIC -->
   <div class="topic-area">
-    <div class="topic-top">
-      <input id="topic" class="topic-in" type="text" placeholder="Type your topic or pick one below…"/>
+    <div class="topic-row">
+      <input id="topic" class="topic-in" type="text" placeholder="Enter any topic… e.g. 'Future of 3D Vision and Robotics'"/>
       <div class="ctrls">
-        <button class="btn" id="go-btn" onclick="startDebate()">▶ Start</button>
+        <button class="btn btn-go" id="go-btn" onclick="startDebate()">▶ Start</button>
         <button class="btn btn-sec" id="pause-btn" onclick="togglePause()" style="display:none">⏸ Pause</button>
         <button class="btn btn-sec" id="reset-btn" onclick="resetAll()" style="display:none">↺ Reset</button>
       </div>
     </div>
-    <select id="topic-suggestions" onchange="onSuggestionSelect()">
-      <option value="">💡 Or pick a suggested topic from config.json…</option>
+    <select id="topic-suggestions" onchange="onTopicSelect()">
+      <option value="">💡 Pick a suggested topic…</option>
     </select>
   </div>
 
-  <!-- CHAT FEED -->
   <div class="chat-box">
     <div class="chat-top">
-      <span class="chat-top-label">Live Debate</span>
+      <span class="chat-label">Live Debate</span>
       <div class="round-track">
-        <span id="round-label">Loading…</span>
-        <div id="round-pips"></div>
+        <span id="rlabel">Round 0</span>
+        <div id="pips"></div>
       </div>
     </div>
     <div class="feed" id="feed">
-      <div class="empty" id="feed-empty">
+      <div class="empty" id="empty">
         <div class="empty-icon">🤖</div>
-        <p id="feed-empty-models">Loading models from config.json…</p>
+        <p>Paste your Groq key, type a topic, and press <strong>▶ Start</strong>.<br/>The debate begins immediately — no other setup needed.</p>
       </div>
     </div>
   </div>
 
-  <!-- HOW TO GET KEY -->
   <div class="howto">
     <div class="howto-hdr">
-      <h3>🔑 How to get your FREE Groq API Key</h3>
+      <h3>🔑 Get your FREE Groq API Key</h3>
       <span class="free-pill">No Credit Card · 60 Seconds</span>
     </div>
     <div class="steps">
-      <div class="step">
-        <div class="snum">1</div>
-        <div class="sbody">
-          <div class="stitle">Go to console.groq.com</div>
-          <div class="sdesc">Open <a href="https://console.groq.com" target="_blank">console.groq.com</a>. Click <strong>Sign Up</strong> — use <strong>GitHub login</strong> for the smoothest experience. No credit card needed.</div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="snum">2</div>
-        <div class="sbody">
-          <div class="stitle">Create an API Key</div>
-          <div class="sdesc">Once logged in, click <strong>API Keys</strong> in the sidebar → <strong>Create API Key</strong>. Name it anything, e.g. <code>roundtable</code>.</div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="snum">3</div>
-        <div class="sbody">
-          <div class="stitle">Copy it — shown only once!</div>
-          <div class="sdesc">Copy immediately. It starts with <code>gsk_…</code></div>
-          <div class="sbox">Example: <code>gsk_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234...</code></div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="snum">4</div>
-        <div class="sbody">
-          <div class="stitle">Paste above → Save Key → Start! 🎉</div>
-          <div class="sdesc">That's it. One key powers all models.</div>
-        </div>
-      </div>
+      <div class="step"><div class="snum">1</div><div class="sbody"><div class="stitle">Go to console.groq.com</div><div class="sdesc">Open <a href="https://console.groq.com" target="_blank">console.groq.com</a>. Sign up using <strong>GitHub login</strong> — fastest option, no card needed.</div></div></div>
+      <div class="step"><div class="snum">2</div><div class="sbody"><div class="stitle">Create an API Key</div><div class="sdesc">Click <strong>API Keys</strong> in the sidebar → <strong>Create API Key</strong>. Name it <code>roundtable</code>.</div></div></div>
+      <div class="step"><div class="snum">3</div><div class="sbody"><div class="stitle">Copy it — shown only once!</div><div class="sdesc">Copy immediately. Starts with <code>gsk_…</code></div><div class="sbox">Example: <code>gsk_aBcDeFgHiJkLmNoPqRsTuVwXyZ...</code></div></div></div>
+      <div class="step"><div class="snum">4</div><div class="sbody"><div class="stitle">Paste above → Save Key → Start! 🎉</div><div class="sdesc">One key powers all models. Free tier: <code>30 req/min</code> per model.</div></div></div>
     </div>
   </div>
 
-  <!-- CONFIG DOCS -->
-  <div class="config-docs">
-    <div class="config-docs-hdr">
-      <h3>⚙ Customizing the Roundtable</h3>
-      <span class="edit-pill">Edit config.json Only</span>
+  <div class="cfg-docs">
+    <div class="cfg-docs-hdr">
+      <h3>⚙ Customise via config.json</h3>
+      <span class="edit-pill">Never touch index.html</span>
     </div>
-    <div class="config-body">
-      <strong>You never need to touch index.html or app.js.</strong> Everything is controlled by <code>config.json</code> in your GitHub repo.
-      Just edit it and push — the page auto-fetches it on every load.
-
-      <table class="config-table">
-        <tr><th>Field</th><th>What it does</th></tr>
-        <tr><td>debate_rounds</td><td>How many rounds of debate before conclusion (default: 9)</td></tr>
-        <tr><td>conclusion_round</td><td>true/false — whether to add a final problem statement round</td></tr>
-        <tr><td>inter_turn_delay_ms</td><td>Pause between turns in ms (increase to avoid rate limits)</td></tr>
-        <tr><td>agents[ ]</td><td>Add, remove, or change AI models. Each needs id, name, model, color, personality, style</td></tr>
-        <tr><td>agents[].model</td><td>Any model string from <a href="https://console.groq.com/docs/models" target="_blank">console.groq.com/docs/models</a></td></tr>
-        <tr><td>suggested_topics[ ]</td><td>The dropdown topics shown below the text input</td></tr>
+    <div class="cfg-body">
+      <strong>Upload <code>config.json</code> to your GitHub repo</strong> alongside <code>index.html</code> — this page fetches it automatically on load. If it's missing, the hardcoded defaults above are used and everything still works.
+      <table class="cfg-table">
+        <tr><th>Key</th><th>What it controls</th></tr>
+        <tr><td>debate_rounds</td><td>Number of debate rounds before conclusion (default: 9)</td></tr>
+        <tr><td>conclusion_round</td><td>true/false — force a final problem statement round</td></tr>
+        <tr><td>inter_turn_delay_ms</td><td>Delay between turns — increase if hitting rate limits</td></tr>
+        <tr><td>agents[].model</td><td>Any model ID from <a href="https://console.groq.com/docs/models" target="_blank">console.groq.com/docs/models</a></td></tr>
+        <tr><td>agents[].personality</td><td>The character prompt for that model</td></tr>
+        <tr><td>suggested_topics[]</td><td>Topics shown in the dropdown below the input</td></tr>
       </table>
     </div>
   </div>
 
   <footer>
     Built by <a href="https://saibhargav1208.github.io" target="_blank">Sai Bhargav Rongali</a> ·
-    Config-driven · Powered by <a href="https://groq.com" target="_blank">Groq</a> ·
-    <a href="https://github.com/saibhargav1208/AI_Roundtable" target="_blank">View on GitHub</a>
+    Powered by <a href="https://groq.com" target="_blank">Groq</a> ·
+    <a href="https://github.com/saibhargav1208/AI_Roundtable" target="_blank">GitHub</a>
   </footer>
 </div>
 
-<!-- app.js inlined — config still loaded from config.json -->
 <script>
-// ── app.js · AI Roundtable ─────────────────────────────────────────────────
-// Fetches config.json on load. To change models/rounds/personas, edit config.json only.
+// ── DEFAULT CONFIG (used if config.json is missing) ───────────────────────
+const DEFAULTS = {
+  title: null, subtitle: null,
+  debate_rounds: 9,
+  conclusion_round: true,
+  inter_turn_delay_ms: 1500,
+  suggested_topics: [
+    "What is the true problem statement for the 3D-LLM-VLA workshop? https://3d-llm-vla.github.io/",
+    "Will AI replace researchers in the next 10 years?",
+    "Is open-source AI better than closed-source AI?",
+    "What is the most important unsolved problem in Computer Vision?"
+  ],
+  agents: [
+    { id:'a', emoji:'🦙', name:'LLaMA 3.3', model:'llama-3.3-70b-versatile', provider:'Meta', color:'#f97316',
+      role:'"The Bold One" — challenges everything',
+      personality:'Bold, direct, provocative. Challenge assumptions confidently.',
+      style:'MAXIMUM 3 sentences. Be punchy. Directly respond to the last message. NEVER start with filler like "Great point" or "As an AI".' },
+    { id:'b', emoji:'🧠', name:'Qwen 3', model:'qwen/qwen3-32b', provider:'Alibaba', color:'#60a5fa',
+      role:'"The Analyst" — precise, structured',
+      personality:'Analytical, precise, structured. Find logical gaps. Bring evidence.',
+      style:'MAXIMUM 3 sentences. Be precise. Directly engage with what was said. NEVER use filler openers.' },
+    { id:'c', emoji:'⚡', name:'LLaMA 3.1', model:'llama-3.1-8b-instant', provider:'Meta (Fast)', color:'#4ade80',
+      role:'"The Sprinter" — fast & contrarian',
+      personality:'Quick, sharp, contrarian. Cut through complexity with simple devastating observations.',
+      style:'MAXIMUM 3 sentences. Be ultra-concise. Find the simplest angle. NEVER use filler openers.' }
+  ]
+};
 
-let CONFIG   = null;
-let convo    = [];
-let round    = 0;
-let paused   = false;
-let running  = false;
-let stopped  = false;
+// ── STATE ─────────────────────────────────────────────────────────────────
+let CFG     = DEFAULTS;   // always has a value — never null
+let convo   = [];
+let round   = 0;
+let paused  = false;
+let running = false;
+let stopped = false;
 
-// ── LOAD CONFIG ──────────────────────────────────────────────────────────────
-async function loadConfig() {
+// ── BOOT — config.json is optional enhancement, not requirement ───────────
+window.addEventListener('load', () => {
+  initKey();
+  buildPips();
+  loadSuggestions();
+  tryLoadConfig();   // fires async, page is fully interactive without it
+  document.getElementById('topic').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !running) startDebate();
+  });
+});
+
+async function tryLoadConfig() {
+  const notice = document.getElementById('cfg-notice');
   try {
     const res = await fetch('./config.json?v=' + Date.now());
-    if (!res.ok) throw new Error('Could not load config.json — ' + res.status);
-    CONFIG = await res.json();
-    applyConfig();
+    if (!res.ok) throw new Error('config.json not found (' + res.status + ') — using defaults');
+    const json = await res.json();
+    // Merge with defaults so partial configs work too
+    CFG = Object.assign({}, DEFAULTS, json);
+    if (json.agents) CFG.agents = json.agents;
+    notice.textContent = '✓ config.json loaded — models and settings updated';
+    notice.className = 'cfg-notice loaded';
+    applyConfigToUI();
   } catch(e) {
-    document.getElementById('config-error').textContent = '⚠ ' + e.message;
-    document.getElementById('config-error').style.display = '';
+    notice.textContent = 'ℹ ' + e.message;
+    notice.className = 'cfg-notice failed';
+    // Page still works perfectly with DEFAULTS
   }
+  setTimeout(() => notice.style.display = 'none', 4000);
 }
 
-function applyConfig() {
-  // Title
-  document.getElementById('app-title').textContent   = CONFIG.title;
-  document.getElementById('app-subtitle').textContent = CONFIG.subtitle;
+function applyConfigToUI() {
+  if (CFG.title)    document.getElementById('page-title').textContent = CFG.title;
+  if (CFG.subtitle) document.getElementById('page-sub').innerHTML    = CFG.subtitle;
 
-  // Suggested topics dropdown
-  const sel = document.getElementById('topic-suggestions');
-  CONFIG.suggested_topics.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t; opt.textContent = t.length > 60 ? t.slice(0,60)+'…' : t;
-    sel.appendChild(opt);
-  });
-
-  // Agent cards
+  // Rebuild agent cards from config
   const grid = document.getElementById('agent-grid');
   grid.innerHTML = '';
-  CONFIG.agents.forEach(ag => {
+  CFG.agents.forEach(ag => {
     grid.innerHTML += `
       <div class="ac" id="card-${ag.id}" style="--col:${ag.color}">
         <div class="ac-emoji">${ag.emoji}</div>
@@ -377,29 +337,40 @@ function applyConfig() {
       </div>`;
   });
 
-  // Round pips
-  const totalRounds = CONFIG.debate_rounds + (CONFIG.conclusion_round ? 1 : 0);
-  const pipsEl = document.getElementById('round-pips');
-  pipsEl.innerHTML = '';
-  for (let i = 1; i <= totalRounds; i++) {
-    const pip = document.createElement('div');
-    pip.className = 'pip';
-    pip.id = 'p' + i;
-    if (i === totalRounds && CONFIG.conclusion_round) {
-      pip.style.opacity = '0.4';
-      pip.style.background = '#4ade80';
-      pip.title = 'Conclusion Round';
-    }
-    pipsEl.appendChild(pip);
-  }
-  updateRoundLabel(0);
-
-  // Empty feed message
-  const names = CONFIG.agents.map(a => `<code>${a.name}</code>`).join(', ');
-  document.getElementById('feed-empty-models').innerHTML = names;
+  buildPips();
+  loadSuggestions();
 }
 
-// ── KEY ───────────────────────────────────────────────────────────────────────
+function buildPips() {
+  const total = CFG.debate_rounds + (CFG.conclusion_round ? 1 : 0);
+  const el = document.getElementById('pips');
+  el.innerHTML = '';
+  for (let i = 1; i <= total; i++) {
+    const p = document.createElement('div');
+    p.className = 'pip'; p.id = 'p' + i;
+    if (i === total && CFG.conclusion_round) { p.style.opacity='0.4'; p.style.background='#4ade80'; }
+    el.appendChild(p);
+  }
+  updateRound(0);
+}
+
+function loadSuggestions() {
+  const sel = document.getElementById('topic-suggestions');
+  // Remove old dynamic options, keep first placeholder
+  while (sel.options.length > 1) sel.remove(1);
+  (CFG.suggested_topics || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t.length > 70 ? t.slice(0,70)+'…' : t;
+    sel.appendChild(o);
+  });
+}
+
+function onTopicSelect() {
+  const v = document.getElementById('topic-suggestions').value;
+  if (v) document.getElementById('topic').value = v;
+}
+
+// ── KEY ───────────────────────────────────────────────────────────────────
 const getKey = () => localStorage.getItem('groq_rt_key') || '';
 function saveKey() {
   const v = document.getElementById('groq-key').value.trim();
@@ -410,64 +381,50 @@ function saveKey() {
 }
 function initKey() {
   const k = getKey();
-  if (k) {
-    document.getElementById('groq-key').value = k;
-    document.getElementById('key-ok').style.display = '';
-  }
+  if (k) { document.getElementById('groq-key').value = k; document.getElementById('key-ok').style.display = ''; }
 }
 
-// ── TOPIC SUGGESTION ─────────────────────────────────────────────────────────
-function onSuggestionSelect() {
-  const v = document.getElementById('topic-suggestions').value;
-  if (v) document.getElementById('topic').value = v;
-}
-
-// ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
+// ── PROMPTS ───────────────────────────────────────────────────────────────
 function buildSystem(ag) {
-  const others = CONFIG.agents.filter(a => a.id !== ag.id).map(a => `${a.name} (${a.provider})`).join(' and ');
-  return `You are ${ag.name} by ${ag.provider}. You're in a live debate with ${others}, all running on Groq.
-Personality: ${ag.personality}
-Rules: ${ag.style}`;
+  const others = CFG.agents.filter(a => a.id !== ag.id).map(a => `${a.name} (${a.provider})`).join(' and ');
+  return `You are ${ag.name} by ${ag.provider}. You're in a live debate with ${others}, all running on Groq.\nPersonality: ${ag.personality}\nRules: ${ag.style}`;
 }
-
-function buildPrompt(agId, topic) {
-  if (!convo.length)
-    return `Topic: "${topic}"\n\nYou go first. Open the debate with your sharpest take.`;
+function buildPrompt(topic) {
+  if (!convo.length) return `Topic: "${topic}"\n\nYou go first. Open with your sharpest take.`;
   const log = convo.slice(-8).map(m => {
-    const a = CONFIG.agents.find(x => x.id === m.id);
+    const a = CFG.agents.find(x => x.id === m.id);
     return `${a.name}: ${m.text}`;
   }).join('\n\n');
-  return `Topic: "${topic}"\n\nConversation so far:\n${log}\n\nYour turn. Respond directly and move the debate forward.`;
+  return `Topic: "${topic}"\n\nConversation:\n${log}\n\nYour turn. Respond directly.`;
 }
-
-function buildConclusionPrompt(agId, topic) {
+function buildConclusion(topic) {
   const log = convo.slice(-9).map(m => {
-    const a = CONFIG.agents.find(x => x.id === m.id);
+    const a = CFG.agents.find(x => x.id === m.id);
     return `${a.name}: ${m.text}`;
   }).join('\n\n');
-  return `Topic: "${topic}"\n\nFull debate:\n${log}\n\nThis is the FINAL CONCLUSION round. Based on everything discussed, state ONE clear, concise problem statement (2 sentences max) that best captures the core challenge. Begin with "My final problem statement:"`;
+  return `Topic: "${topic}"\n\nDebate so far:\n${log}\n\nFINAL ROUND: State ONE clear problem statement (2 sentences max) based on the full discussion. Start with "My final problem statement:"`;
 }
 
-// ── GROQ API ──────────────────────────────────────────────────────────────────
-async function callGroq(ag, promptText, isConclusion = false) {
+// ── GROQ ──────────────────────────────────────────────────────────────────
+async function callGroq(ag, prompt, isConclusion) {
   const key = getKey();
-  if (!key) throw new Error('No Groq key — paste it above and click Save');
+  if (!key) throw new Error('No Groq key — paste it above and click Save Key');
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + key },
     body: JSON.stringify({
       model: ag.model,
       max_tokens: isConclusion ? 120 : 200,
       temperature: isConclusion ? 0.6 : 0.88,
       messages: [
-        { role: 'system', content: buildSystem(ag) },
-        { role: 'user',   content: promptText },
-      ],
-    }),
+        { role:'system', content: buildSystem(ag) },
+        { role:'user',   content: prompt }
+      ]
+    })
   });
   if (!res.ok) {
     const e = await res.text();
-    let msg = `Groq ${res.status}`;
+    let msg = 'Groq ' + res.status;
     try { msg = JSON.parse(e).error?.message || msg; } catch(_) {}
     throw new Error(msg);
   }
@@ -475,137 +432,129 @@ async function callGroq(ag, promptText, isConclusion = false) {
   return d.choices?.[0]?.message?.content?.trim() || null;
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
+// ── RENDER ────────────────────────────────────────────────────────────────
 const nowStr = () => new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 const esc    = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const feedEl = () => document.getElementById('feed');
-function hideEmpty() { document.getElementById('feed-empty')?.remove(); }
+function hideEmpty() { document.getElementById('empty')?.remove(); }
 
 function sysmsg(html) {
   hideEmpty();
   const el = document.createElement('div');
-  el.className = 'msg ms';
-  el.innerHTML = `<div class="av sys-av">·</div><div class="mbody"><div class="mmeta"><span class="mname sys-name">System</span><span class="mtime">${nowStr()}</span></div><p class="mtext sys-text">${html}</p></div>`;
+  el.className = 'msg';
+  el.innerHTML = `<div class="av" style="background:#111;border-color:var(--border);font-size:14px">·</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:var(--muted)">System</span><span class="mtime">${nowStr()}</span></div><p class="mtext" style="color:var(--muted);font-style:italic;font-size:12px">${html}</p></div>`;
   feedEl().appendChild(el); feedEl().scrollTop = 9999;
 }
-
 function showTyping(ag) {
   hideEmpty();
   const el = document.createElement('div');
-  el.className = 'msg'; el.id = `typing-${ag.id}`;
-  el.style.setProperty('--col', ag.color);
+  el.className = 'msg'; el.id = 'typing-' + ag.id;
   el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime">${nowStr()}</span></div><div class="typing"><span style="background:${ag.color}"></span><span style="background:${ag.color}"></span><span style="background:${ag.color}"></span></div></div>`;
   feedEl().appendChild(el); feedEl().scrollTop = 9999;
-  setSt(ag.id, 'Thinking…', ag.color); setCard(ag.id, true, ag.color);
+  setSt(ag.id,'Thinking…',ag.color); setCard(ag.id,true,ag.color);
 }
-function rmTyping(id) { document.getElementById(`typing-${id}`)?.remove(); }
-
-function addMsg(ag, text, isConclusion = false) {
+function rmTyping(id) { document.getElementById('typing-'+id)?.remove(); }
+function addMsg(ag, text, isConclusion) {
   rmTyping(ag.id);
+  const badge = isConclusion ? '<span class="conclusion-badge">✦ Final Statement</span>' : '';
   const el = document.createElement('div');
   el.className = 'msg';
-  const badge = isConclusion ? `<span class="conclusion-badge">✦ Final Statement</span>` : '';
   el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime">${nowStr()}</span>${badge}</div><p class="mtext">${esc(text)}</p></div>`;
   feedEl().appendChild(el); feedEl().scrollTop = 9999;
-  setSt(ag.id, 'Done ✓', ag.color); setCard(ag.id, false, ag.color);
-  if (!isConclusion) convo.push({ id: ag.id, text });
+  setSt(ag.id,'Done ✓',ag.color); setCard(ag.id,false,ag.color);
+  if (!isConclusion) convo.push({id:ag.id, text});
 }
-
 function setSt(id, msg, color) {
-  const el = document.getElementById(`st-${id}`);
-  if (!el) return;
-  el.textContent = msg;
+  const el = document.getElementById('st-'+id);
+  if (!el) return; el.textContent = msg;
   el.style.color = msg.includes('Thinking') ? color : '';
 }
 function setCard(id, on, color) {
-  const el = document.getElementById(`card-${id}`);
+  const el = document.getElementById('card-'+id);
   if (!el) return;
   el.style.borderColor = on ? color : '';
-  el.style.boxShadow   = on ? `0 0 28px -4px ${color}` : '';
+  el.style.boxShadow   = on ? '0 0 28px -4px '+color : '';
 }
-function updateRoundLabel(n) {
-  const total = CONFIG ? CONFIG.debate_rounds + (CONFIG.conclusion_round ? 1 : 0) : 10;
-  document.getElementById('round-label').textContent = `Round ${n} / ${total}`;
+function updateRound(n) {
+  const total = CFG.debate_rounds + (CFG.conclusion_round ? 1 : 0);
+  document.getElementById('rlabel').textContent = 'Round ' + n + ' / ' + total;
   for (let i = 1; i <= total; i++) {
-    const p = document.getElementById(`p${i}`);
-    if (p && i !== total) p.className = 'pip' + (i <= n ? ' go' : '');
+    const p = document.getElementById('p'+i);
+    if (!p) continue;
+    if (i === total && CFG.conclusion_round) {
+      p.className = 'pip' + (n >= total ? ' conclude' : '');
+    } else {
+      p.className = 'pip' + (i <= n ? ' go' : '');
+    }
   }
 }
 
-// ── MAIN LOOP ─────────────────────────────────────────────────────────────────
+// ── LOOP ──────────────────────────────────────────────────────────────────
 const wait = ms => new Promise(r => setTimeout(r, ms));
 async function waitUnpause() { while (paused && !stopped) await wait(300); }
 
 async function startDebate() {
-  if (!CONFIG) { alert('Config not loaded yet. Please refresh.'); return; }
   const topic = document.getElementById('topic').value.trim();
-  if (!topic) { alert('Please enter a topic!'); return; }
-  if (!getKey()) { alert('Please paste your Groq API key above!'); return; }
+  if (!topic)   { alert('Please enter a topic!'); return; }
+  if (!getKey()) { alert('Please paste your Groq API key and click Save Key!'); return; }
 
   running=true; stopped=false; paused=false; round=0; convo=[];
   document.getElementById('go-btn').disabled = true;
   document.getElementById('pause-btn').style.display = '';
   document.getElementById('reset-btn').style.display = '';
   document.getElementById('topic').disabled = true;
-  updateRoundLabel(0);
-
-  const n = CONFIG.agents.length;
-  const r = CONFIG.debate_rounds;
-  sysmsg(`🎙 Topic: <strong>${esc(topic)}</strong> — ${n} models · ${r} debate rounds + conclusion`);
+  updateRound(0);
+  sysmsg('🎙 Topic: <strong>'+esc(topic)+'</strong> — '+CFG.agents.length+' models · '+CFG.debate_rounds+' rounds'+(CFG.conclusion_round?' + conclusion':''));
   await wait(500);
 
-  // DEBATE ROUNDS
-  while (!stopped && round < CONFIG.debate_rounds) {
-    round++; updateRoundLabel(round);
-    for (const ag of CONFIG.agents) {
+  while (!stopped && round < CFG.debate_rounds) {
+    round++; updateRound(round);
+    for (const ag of CFG.agents) {
       if (stopped) break;
       await waitUnpause(); if (stopped) break;
       showTyping(ag);
-      await wait(600 + Math.random() * 400);
-      await waitUnpause(); if (stopped) { rmTyping(ag.id); setCard(ag.id, false, ag.color); break; }
+      await wait(600 + Math.random()*400);
+      await waitUnpause(); if (stopped) { rmTyping(ag.id); setCard(ag.id,false,ag.color); break; }
       try {
-        const text = await callGroq(ag, buildPrompt(ag.id, topic));
-        if (text) addMsg(ag, text);
-        else { rmTyping(ag.id); setCard(ag.id, false, ag.color); setSt(ag.id, 'No response', ''); }
+        const text = await callGroq(ag, buildPrompt(topic), false);
+        if (text) addMsg(ag, text, false);
+        else { rmTyping(ag.id); setCard(ag.id,false,ag.color); setSt(ag.id,'No response',''); }
       } catch(e) {
-        rmTyping(ag.id); setCard(ag.id, false, ag.color); setSt(ag.id, 'Error ✗', '#f87171');
-        sysmsg(`⚠ <strong>${ag.name}</strong>: ${esc(e.message)}`);
+        rmTyping(ag.id); setCard(ag.id,false,ag.color); setSt(ag.id,'Error ✗','#f87171');
+        sysmsg('⚠ <strong>'+ag.name+'</strong>: '+esc(e.message));
       }
-      await wait(CONFIG.inter_turn_delay_ms + Math.random() * 500);
+      await wait(CFG.inter_turn_delay_ms + Math.random()*500);
     }
   }
 
-  // CONCLUSION ROUND
-  if (!stopped && CONFIG.conclusion_round) {
-    const conclusionRound = CONFIG.debate_rounds + 1;
-    updateRoundLabel(conclusionRound);
-    const p10 = document.getElementById(`p${conclusionRound}`);
-    if (p10) { p10.style.opacity = '1'; p10.style.background = '#4ade80'; p10.className = 'pip go'; }
+  if (!stopped && CFG.conclusion_round) {
+    const cRound = CFG.debate_rounds + 1;
+    updateRound(cRound);
     sysmsg('🏁 <strong>Conclusion Round</strong> — each model states their final problem statement!');
-    await wait(700);
-    for (const ag of CONFIG.agents) {
+    await wait(600);
+    for (const ag of CFG.agents) {
       if (stopped) break;
       await waitUnpause(); if (stopped) break;
       showTyping(ag);
-      await wait(700 + Math.random() * 400);
-      await waitUnpause(); if (stopped) { rmTyping(ag.id); setCard(ag.id, false, ag.color); break; }
+      await wait(700 + Math.random()*400);
+      await waitUnpause(); if (stopped) { rmTyping(ag.id); setCard(ag.id,false,ag.color); break; }
       try {
-        const text = await callGroq(ag, buildConclusionPrompt(ag.id, topic), true);
+        const text = await callGroq(ag, buildConclusion(topic), true);
         if (text) addMsg(ag, text, true);
-        else { rmTyping(ag.id); setCard(ag.id, false, ag.color); }
+        else { rmTyping(ag.id); setCard(ag.id,false,ag.color); }
       } catch(e) {
-        rmTyping(ag.id); setCard(ag.id, false, ag.color);
-        sysmsg(`⚠ <strong>${ag.name}</strong>: ${esc(e.message)}`);
+        rmTyping(ag.id); setCard(ag.id,false,ag.color);
+        sysmsg('⚠ <strong>'+ag.name+'</strong>: '+esc(e.message));
       }
-      await wait(CONFIG.inter_turn_delay_ms);
+      await wait(CFG.inter_turn_delay_ms);
     }
-    sysmsg('✅ Done! See the <strong>Final Statements</strong> above. Hit Reset for a new topic.');
+    sysmsg('✅ Done! See <strong>Final Statements</strong> above. Hit Reset for a new topic.');
   }
 
   running = false;
   document.getElementById('go-btn').disabled = false;
   document.getElementById('pause-btn').style.display = 'none';
-  CONFIG.agents.forEach(ag => { setCard(ag.id, false, ag.color); setSt(ag.id, 'Done', ''); });
+  CFG.agents.forEach(ag => { setCard(ag.id,false,ag.color); setSt(ag.id,'Done',''); });
 }
 
 function togglePause() {
@@ -616,32 +565,16 @@ function togglePause() {
 
 function resetAll() {
   stopped=true; paused=false; running=false;
-  convo=[]; round=0;
-  updateRoundLabel(0);
+  convo=[]; round=0; updateRound(0);
   document.getElementById('go-btn').disabled = false;
   document.getElementById('pause-btn').style.display = 'none';
   document.getElementById('reset-btn').style.display = 'none';
   document.getElementById('topic').disabled = false;
   document.getElementById('pause-btn').textContent = '⏸ Pause';
   document.getElementById('topic-suggestions').value = '';
-  const names = CONFIG ? CONFIG.agents.map(a => `<code>${a.name}</code>`).join(', ') : '';
-  document.getElementById('feed').innerHTML = `
-    <div class="empty" id="feed-empty">
-      <div class="empty-icon">🤖</div>
-      <p>${names} will debate using a single Groq key.<br/>Pick a topic and press Start.</p>
-    </div>`;
-  if (CONFIG) CONFIG.agents.forEach(ag => { setCard(ag.id, false, ag.color); setSt(ag.id, 'Standby', ''); });
+  document.getElementById('feed').innerHTML = '<div class="empty" id="empty"><div class="empty-icon">🤖</div><p>Ready for a new topic. Press Start whenever you are.</p></div>';
+  CFG.agents.forEach(ag => { setCard(ag.id,false,ag.color); setSt(ag.id,'Standby',''); });
 }
-
-// ── BOOT ──────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  initKey();
-  loadConfig();
-  document.getElementById('topic').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !running) startDebate();
-  });
-});
-
 </script>
 </body>
 </html>
