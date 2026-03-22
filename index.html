@@ -488,11 +488,12 @@ async function callGroq(ag, prompt, isConclusion) {
   let text = d.choices?.[0]?.message?.content?.trim() || null;
   if (text) {
     // Strip Qwen chain-of-thought <think>...</think> blocks
-    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    // Strip <think>...</think> blocks (Qwen chain-of-thought)
+    var _out='', _pos=0;
+    while(_pos<text.length){var _s=text.indexOf('<think>',_pos);if(_s===-1){_out+=text.slice(_pos);break;}_out+=text.slice(_pos,_s);var _e=text.indexOf('</think>',_s);if(_e===-1)break;_pos=_e+8;}
+    text=_out.trim();
     // Also strip any leading/trailing blank lines left behind
-    text = text.replace(/^
-+|
-+$/g, '').trim();
+    text = text.trim();
     // If nothing left after stripping, return null
     if (!text) return null;
   }
