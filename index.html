@@ -69,6 +69,11 @@
     .btn-go:disabled { opacity:0.35; transform:none; cursor:not-allowed; }
     .btn-sec { background:var(--surface); border:1px solid var(--border); color:var(--dim); }
     .btn-sec:hover { color:var(--text); border-color:var(--muted); }
+    .btn-cont { background:var(--surface); border:1px solid #2a2a5a; color:#a0a0f0; }
+    .btn-cont:hover { color:var(--text); border-color:#6060c0; background:#12123a; }
+    .btn-conclude { background:#071a07; border:1px solid #1a4a1a; color:#4ade80; }
+    .btn-conclude:hover { background:#0d2a0d; border-color:#2a6a2a; }
+    .btn-conclude:disabled { opacity:0.4; cursor:not-allowed; }
     .chat-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
     .chat-top { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
     .chat-label { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
@@ -186,9 +191,11 @@
     <div class="topic-row">
       <input id="topic" class="topic-in" type="text" placeholder="Enter any topic… e.g. 'Future of 3D Vision and Robotics'"/>
       <div class="ctrls">
-        <button class="btn btn-go" id="go-btn" onclick="startDebate()">▶ Start</button>
+        <button class="btn btn-go" id="go-btn" onclick="startDebate(false)">▶ Start New</button>
+        <button class="btn btn-cont" id="cont-btn" onclick="startDebate(true)" style="display:none">↩ Continue</button>
         <button class="btn btn-sec" id="pause-btn" onclick="togglePause()" style="display:none">⏸ Pause</button>
-        <button class="btn btn-sec" id="reset-btn" onclick="resetAll()" style="display:none">↺ Reset</button>
+        <button class="btn btn-conclude" id="conclude-btn" onclick="concludeNow()" style="display:none">🏁 Conclude</button>
+        <button class="btn btn-sec" id="reset-btn" onclick="resetAll()" style="display:none">↺ Clear</button>
       </div>
     </div>
     <select id="topic-suggestions" onchange="onTopicSelect()">
@@ -288,14 +295,52 @@ let paused  = false;
 let running = false;
 let stopped = false;
 
+// ── PERSIST CONVERSATION ──────────────────────────────────────────────────
+function saveSession() {
+  try {
+    localStorage.setItem('rt_session', JSON.stringify({
+      topic: document.getElementById('topic').value,
+      convo,
+      round,
+      savedAt: Date.now()
+    }));
+  } catch(e) {}
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem('rt_session');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function clearSession() {
+  localStorage.removeItem('rt_session');
+}
+
+function showContinueIfAvailable() {
+  const s = loadSession();
+  const btn = document.getElementById('cont-btn');
+  if (s && s.convo && s.convo.length > 0) {
+    const mins = Math.round((Date.now() - s.savedAt) / 60000);
+    const age = mins < 1 ? 'just now' : mins < 60 ? mins+'m ago' : Math.round(mins/60)+'h ago';
+    btn.textContent = '↩ Continue (' + s.convo.length + ' msgs, ' + age + ')';
+    btn.style.display = '';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
 // ── BOOT — config.json is optional enhancement, not requirement ───────────
 window.addEventListener('load', () => {
   initKey();
   buildPips();
   loadSuggestions();
+  showContinueIfAvailable();
   tryLoadConfig();   // fires async, page is fully interactive without it
   document.getElementById('topic').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !running) startDebate();
+    if (e.key === 'Enter' && !running) startDebate(false);
   });
 });
 
@@ -405,6 +450,17 @@ function buildConclusion(topic) {
   return `Topic: "${topic}"\n\nDebate so far:\n${log}\n\nFINAL ROUND: State ONE clear problem statement (2 sentences max) based on the full discussion. Start with "My final problem statement:"`;
 }
 
+// ── SMART SCROLL ─────────────────────────────────────────────────────────
+function smartScroll() {
+  const f = feedEl();
+  if (!f) return;
+  // Only auto-scroll if user is within 120px of the bottom
+  const distFromBottom = f.scrollHeight - f.scrollTop - f.clientHeight;
+  if (distFromBottom < 120) {
+    f.scrollTop = f.scrollHeight;
+  }
+}
+
 // ── GROQ ──────────────────────────────────────────────────────────────────
 async function callGroq(ag, prompt, isConclusion) {
   const key = getKey();
@@ -414,7 +470,7 @@ async function callGroq(ag, prompt, isConclusion) {
     headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + key },
     body: JSON.stringify({
       model: ag.model,
-      max_tokens: isConclusion ? 120 : 200,
+      max_tokens: isConclusion ? 300 : 500,
       temperature: isConclusion ? 0.6 : 0.88,
       messages: [
         { role:'system', content: buildSystem(ag) },
@@ -429,7 +485,18 @@ async function callGroq(ag, prompt, isConclusion) {
     throw new Error(msg);
   }
   const d = await res.json();
-  return d.choices?.[0]?.message?.content?.trim() || null;
+  let text = d.choices?.[0]?.message?.content?.trim() || null;
+  if (text) {
+    // Strip Qwen chain-of-thought <think>...</think> blocks
+    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    // Also strip any leading/trailing blank lines left behind
+    text = text.replace(/^
++|
++$/g, '').trim();
+    // If nothing left after stripping, return null
+    if (!text) return null;
+  }
+  return text;
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
@@ -443,14 +510,14 @@ function sysmsg(html) {
   const el = document.createElement('div');
   el.className = 'msg';
   el.innerHTML = `<div class="av" style="background:#111;border-color:var(--border);font-size:14px">·</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:var(--muted)">System</span><span class="mtime">${nowStr()}</span></div><p class="mtext" style="color:var(--muted);font-style:italic;font-size:12px">${html}</p></div>`;
-  feedEl().appendChild(el); feedEl().scrollTop = 9999;
+  feedEl().appendChild(el); smartScroll();
 }
 function showTyping(ag) {
   hideEmpty();
   const el = document.createElement('div');
   el.className = 'msg'; el.id = 'typing-' + ag.id;
   el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime">${nowStr()}</span></div><div class="typing"><span style="background:${ag.color}"></span><span style="background:${ag.color}"></span><span style="background:${ag.color}"></span></div></div>`;
-  feedEl().appendChild(el); feedEl().scrollTop = 9999;
+  feedEl().appendChild(el); smartScroll();
   setSt(ag.id,'Thinking…',ag.color); setCard(ag.id,true,ag.color);
 }
 function rmTyping(id) { document.getElementById('typing-'+id)?.remove(); }
@@ -460,7 +527,7 @@ function addMsg(ag, text, isConclusion) {
   const el = document.createElement('div');
   el.className = 'msg';
   el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime">${nowStr()}</span>${badge}</div><p class="mtext">${esc(text)}</p></div>`;
-  feedEl().appendChild(el); feedEl().scrollTop = 9999;
+  feedEl().appendChild(el); smartScroll();
   setSt(ag.id,'Done ✓',ag.color); setCard(ag.id,false,ag.color);
   if (!isConclusion) convo.push({id:ag.id, text});
 }
@@ -493,21 +560,64 @@ function updateRound(n) {
 const wait = ms => new Promise(r => setTimeout(r, ms));
 async function waitUnpause() { while (paused && !stopped) await wait(300); }
 
-async function startDebate() {
+async function startDebate(isContinue) {
   const topic = document.getElementById('topic').value.trim();
   if (!topic)   { alert('Please enter a topic!'); return; }
   if (!getKey()) { alert('Please paste your Groq API key and click Save Key!'); return; }
 
-  running=true; stopped=false; paused=false; round=0; convo=[];
-  document.getElementById('go-btn').disabled = true;
+  running=true; stopped=false; paused=false;
+
+  if (isContinue) {
+    // Restore previous session
+    const s = loadSession();
+    if (s && s.convo && s.convo.length > 0) {
+      convo = s.convo;
+      round = s.round || 0;
+      // Restore topic
+      if (s.topic) document.getElementById('topic').value = s.topic;
+      // Re-render previous messages
+      document.getElementById('feed').innerHTML = '';
+      document.getElementById('empty')?.remove();
+      convo.forEach(m => {
+        const ag = CFG.agents.find(a => a.id === m.id);
+        if (!ag) return;
+        const el = document.createElement('div');
+        el.className = 'msg';
+        el.style.opacity = '0.6'; // dim old messages
+        el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime" style="color:var(--muted)">↩ restored</span></div><p class="mtext">${esc(m.text)}</p></div>`;
+        feedEl().appendChild(el);
+      });
+      smartScroll();
+      sysmsg('↩ Continuing from round '+round+' — '+convo.length+' previous messages restored (dimmed above)');
+    } else {
+      convo = []; round = 0;
+      sysmsg('⚠ No previous session found — starting fresh.');
+    }
+  } else {
+    // Fresh start
+    convo = []; round = 0;
+    document.getElementById('feed').innerHTML = '';
+    clearSession();
+  }
+
+  document.getElementById('go-btn').style.display = 'none';
+  document.getElementById('cont-btn').style.display = 'none';
   document.getElementById('pause-btn').style.display = '';
+  document.getElementById('conclude-btn').style.display = '';
   document.getElementById('reset-btn').style.display = '';
   document.getElementById('topic').disabled = true;
-  updateRound(0);
-  sysmsg('🎙 Topic: <strong>'+esc(topic)+'</strong> — '+CFG.agents.length+' models · '+CFG.debate_rounds+' rounds'+(CFG.conclusion_round?' + conclusion':''));
-  await wait(500);
+  updateRound(round);
 
-  while (!stopped && round < CFG.debate_rounds) {
+  if (!isContinue) {
+    sysmsg('🎙 Topic: <strong>'+esc(document.getElementById('topic').value.trim())+'</strong> — '+CFG.agents.length+' models · unlimited rounds'+(CFG.conclusion_round?' (conclude anytime with Reset→Conclude)':''));
+    await wait(500);
+  } else {
+    await wait(300);
+  }
+
+  // Run indefinitely until stopped — conclusion only triggered manually or via conclude btn
+  while (!stopped) {
+    round++; updateRound(round); saveSession();
     round++; updateRound(round);
     for (const ag of CFG.agents) {
       if (stopped) break;
@@ -527,17 +637,48 @@ async function startDebate() {
     }
   }
 
-  if (!stopped && CFG.conclusion_round) {
-    const cRound = CFG.debate_rounds + 1;
-    updateRound(cRound);
+  // Conclude button was pressed (stopped=true, concluding=true)
+  if (window._concluding) {
+    window._concluding = false;
     sysmsg('🏁 <strong>Conclusion Round</strong> — each model states their final problem statement!');
     await wait(600);
+    const topicVal = document.getElementById('topic').value.trim();
     for (const ag of CFG.agents) {
-      if (stopped) break;
-      await waitUnpause(); if (stopped) break;
       showTyping(ag);
       await wait(700 + Math.random()*400);
-      await waitUnpause(); if (stopped) { rmTyping(ag.id); setCard(ag.id,false,ag.color); break; }
+      try {
+        const text = await callGroq(ag, buildConclusion(topicVal), true);
+        if (text) addMsg(ag, text, true);
+        else { rmTyping(ag.id); setCard(ag.id,false,ag.color); }
+      } catch(e) {
+        rmTyping(ag.id); setCard(ag.id,false,ag.color);
+        sysmsg('⚠ <strong>'+ag.name+'</strong>: '+esc(e.message));
+      }
+      await wait(CFG.inter_turn_delay_ms);
+    }
+    sysmsg('✅ Concluded! <strong>Final statements above.</strong> You can still Continue or Start New.');
+    clearSession();
+  }
+
+  running = false;
+  document.getElementById('go-btn').style.display = '';
+  document.getElementById('go-btn').disabled = false;
+  document.getElementById('pause-btn').style.display = 'none';
+  document.getElementById('conclude-btn').style.display = 'none';
+  showContinueIfAvailable();
+  CFG.agents.forEach(ag => { setCard(ag.id,false,ag.color); setSt(ag.id,'Done',''); });
+}
+
+async function concludeNow() {
+  if (!running) {
+    // Not running — just do conclusion immediately
+    const topic = document.getElementById('topic').value.trim();
+    if (!convo.length) { alert('Nothing to conclude yet — start a debate first!'); return; }
+    document.getElementById('conclude-btn').disabled = true;
+    sysmsg('🏁 <strong>Conclusion Round</strong> — each model states their final problem statement!');
+    for (const ag of CFG.agents) {
+      showTyping(ag);
+      await wait(700);
       try {
         const text = await callGroq(ag, buildConclusion(topic), true);
         if (text) addMsg(ag, text, true);
@@ -548,31 +689,42 @@ async function startDebate() {
       }
       await wait(CFG.inter_turn_delay_ms);
     }
-    sysmsg('✅ Done! See <strong>Final Statements</strong> above. Hit Reset for a new topic.');
+    sysmsg('✅ Done! You can Continue or Start New.');
+    clearSession();
+    document.getElementById('conclude-btn').disabled = false;
+  } else {
+    // Running — stop after current turn then conclude
+    window._concluding = true;
+    stopped = true;
+    sysmsg('⏳ Finishing current turn then concluding…');
   }
-
-  running = false;
-  document.getElementById('go-btn').disabled = false;
-  document.getElementById('pause-btn').style.display = 'none';
-  CFG.agents.forEach(ag => { setCard(ag.id,false,ag.color); setSt(ag.id,'Done',''); });
 }
 
 function togglePause() {
   paused = !paused;
   document.getElementById('pause-btn').textContent = paused ? '▶ Resume' : '⏸ Pause';
-  sysmsg(paused ? '⏸ Paused.' : '▶ Resumed.');
+  if (paused) {
+    saveSession();
+    sysmsg('⏸ Paused & saved. You can safely close the tab and Continue later.');
+  } else {
+    sysmsg('▶ Resumed.');
+  }
 }
 
 function resetAll() {
   stopped=true; paused=false; running=false;
   convo=[]; round=0; updateRound(0);
+  clearSession();
+  document.getElementById('go-btn').style.display = '';
   document.getElementById('go-btn').disabled = false;
+  document.getElementById('cont-btn').style.display = 'none';
   document.getElementById('pause-btn').style.display = 'none';
+  document.getElementById('conclude-btn').style.display = 'none';
   document.getElementById('reset-btn').style.display = 'none';
   document.getElementById('topic').disabled = false;
   document.getElementById('pause-btn').textContent = '⏸ Pause';
   document.getElementById('topic-suggestions').value = '';
-  document.getElementById('feed').innerHTML = '<div class="empty" id="empty"><div class="empty-icon">🤖</div><p>Ready for a new topic. Press Start whenever you are.</p></div>';
+  document.getElementById('feed').innerHTML = '<div class="empty" id="empty"><div class="empty-icon">🤖</div><p>Session cleared. Enter a new topic and press <strong>▶ Start New</strong>.</p></div>';
   CFG.agents.forEach(ag => { setCard(ag.id,false,ag.color); setSt(ag.id,'Standby',''); });
 }
 </script>
