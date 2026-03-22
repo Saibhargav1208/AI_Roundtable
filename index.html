@@ -3,778 +3,630 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Roundtable · Claude × GPT × Gemini</title>
+  <title>AI Face-Off · Gemini vs LLaMA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
-      --bg:       #07070f;
-      --surface:  #0e0e1a;
-      --border:   #1e1e30;
-      --muted:    #4a4a6a;
-      --text:     #e2e2f0;
-      --dim:      #8888aa;
-
-      --claude:   #fb923c;
-      --claude-bg:#1a0f07;
-      --gpt:      #4ade80;
-      --gpt-bg:   #071a0e;
-      --gemini:   #60a5fa;
-      --gemini-bg:#07101a;
-
-      --font-display: 'Syne', sans-serif;
-      --font-mono:    'DM Mono', monospace;
-      --radius: 12px;
+      --bg:#07070f; --surface:#0d0d18; --border:#1a1a2e; --muted:#44445a; --text:#e0e0f0; --dim:#7777a0;
+      --gemini:#60a5fa; --gemini-bg:#070f1a; --gemini-glow:rgba(96,165,250,0.15);
+      --llama:#f97316;  --llama-bg:#1a0e07;  --llama-glow:rgba(249,115,22,0.15);
+      --fd:'Syne',sans-serif; --fm:'DM Mono',monospace; --r:14px;
     }
+    html { scroll-behavior:smooth; }
+    body { font-family:var(--fm); background:var(--bg); color:var(--text); min-height:100vh; }
 
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: var(--font-mono);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ── NOISE TEXTURE ── */
+    /* subtle grid bg */
     body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none; opacity: 0.4;
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:
+        linear-gradient(rgba(96,165,250,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96,165,250,0.03) 1px, transparent 1px);
+      background-size:40px 40px;
     }
 
-    /* ── LAYOUT ── */
-    .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+    .app { position:relative; z-index:1; max-width:940px; margin:0 auto; padding:0 20px 80px; }
 
     /* ── HEADER ── */
-    header {
-      padding: 40px 0 32px;
-      display: flex; align-items: flex-end; justify-content: space-between;
-    }
-    .logo-wrap { display: flex; flex-direction: column; gap: 4px; }
-    .logo-eyebrow {
-      font-family: var(--font-mono); font-size: 10px; font-weight: 500;
-      letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
-    }
-    .logo {
-      font-family: var(--font-display); font-size: 2.0rem; font-weight: 800;
-      line-height: 1; color: var(--text);
-      display: flex; align-items: center; gap: 10px;
-    }
-    .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--claude); display: inline-block; box-shadow: 0 0 12px var(--claude); }
-    .logo-dot.g { background: var(--gpt); box-shadow: 0 0 12px var(--gpt); }
-    .logo-dot.m { background: var(--gemini); box-shadow: 0 0 12px var(--gemini); }
+    header { padding:40px 0 32px; text-align:center; }
+    .eyebrow { font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    .logo { font-family:var(--fd); font-size:2.2rem; font-weight:800; line-height:1; display:inline-flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center; }
+    .logo-gem  { color:var(--gemini); text-shadow:0 0 40px var(--gemini-glow); }
+    .logo-vs   { font-size:1rem; color:var(--muted); font-weight:400; }
+    .logo-llam { color:var(--llama); text-shadow:0 0 40px var(--llama-glow); }
+    .logo-sub  { font-size:11px; color:var(--muted); margin-top:8px; font-family:var(--fm); }
+    .logo-sub span { color:var(--dim); }
+    .free-tag { display:inline-block; font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; background:linear-gradient(135deg,#0a1f0a,#071a07); color:#4ade80; border:1px solid #1a3a1a; padding:4px 14px; border-radius:20px; margin-top:12px; }
 
-    .settings-btn {
-      font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-      color: var(--dim); background: var(--surface); border: 1px solid var(--border);
-      padding: 8px 16px; border-radius: 8px; cursor: pointer;
-      display: flex; align-items: center; gap: 7px; transition: all 0.2s;
+    /* ── KEY BAR ── */
+    .key-bar {
+      display:grid; grid-template-columns:1fr 1fr; gap:12px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r); padding:20px; margin-bottom:20px;
     }
-    .settings-btn:hover { color: var(--text); border-color: var(--muted); }
-    .settings-btn svg { width: 14px; height: 14px; }
+    .key-field { display:flex; flex-direction:column; gap:6px; }
+    .key-label { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; display:flex; align-items:center; gap:7px; }
+    .kldot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .kldot.g { background:var(--gemini); box-shadow:0 0 8px var(--gemini); }
+    .kldot.l { background:var(--llama);  box-shadow:0 0 8px var(--llama); }
+    .key-wrap { display:flex; gap:6px; }
+    .key-in {
+      flex:1; background:var(--bg); border:1px solid var(--border);
+      color:var(--text); font-family:var(--fm); font-size:12px;
+      padding:9px 12px; border-radius:8px; outline:none; transition:border-color 0.2s;
+    }
+    .key-in:focus { border-color:var(--muted); }
+    .key-in::placeholder { color:var(--muted); }
+    .save-btn {
+      font-family:var(--fd); font-size:11px; font-weight:700;
+      padding:9px 14px; border-radius:8px; border:none; cursor:pointer;
+      transition:all 0.18s; white-space:nowrap;
+    }
+    .save-btn.g { background:var(--gemini-bg); color:var(--gemini); border:1px solid #1a2a3a; }
+    .save-btn.g:hover { background:#0d1a2a; }
+    .save-btn.l { background:var(--llama-bg); color:var(--llama); border:1px solid #3a1a0a; }
+    .save-btn.l:hover { background:#2a1208; }
+    .key-hint { font-size:10px; color:var(--muted); }
+    .key-hint a { color:var(--dim); text-decoration:none; }
+    .key-hint a:hover { color:var(--text); }
+    .key-status { font-size:10px; }
+    .key-status.ok  { color:#4ade80; }
+    .key-status.bad { color:#f87171; }
 
-    /* ── AGENT CARDS ── */
-    .agents {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-      margin-bottom: 24px;
+    /* ── TOPIC ── */
+    .topic-row { display:flex; gap:10px; margin-bottom:20px; }
+    .topic-in {
+      flex:1; background:var(--surface); border:1px solid var(--border);
+      color:var(--text); font-family:var(--fm); font-size:13px;
+      padding:13px 18px; border-radius:10px; outline:none; transition:border-color 0.2s;
     }
-    .agent-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 16px;
-      display: flex; flex-direction: column; gap: 4px;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    .agent-card.claude  { --ac: var(--claude); }
-    .agent-card.gpt     { --ac: var(--gpt); }
-    .agent-card.gemini  { --ac: var(--gemini); }
-    .agent-card.speaking {
-      border-color: var(--ac);
-      box-shadow: 0 0 24px -4px var(--ac);
-    }
-    .agent-name {
-      font-family: var(--font-display); font-size: 14px; font-weight: 700;
-      color: var(--ac);
-    }
-    .agent-model { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
-    .agent-status { font-size: 11px; color: var(--dim); min-height: 16px; }
-    .agent-status.thinking { color: var(--ac); }
+    .topic-in::placeholder { color:var(--muted); }
+    .topic-in:focus { border-color:var(--dim); }
+    .ctrls { display:flex; gap:8px; }
+    .btn { font-family:var(--fd); font-size:13px; font-weight:700; padding:13px 22px; border-radius:10px; border:none; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
+    .btn-start { background:linear-gradient(135deg,var(--gemini),var(--llama)); color:#fff; box-shadow:0 4px 24px rgba(96,165,250,0.2); }
+    .btn-start:hover { transform:translateY(-1px); box-shadow:0 6px 32px rgba(96,165,250,0.3); }
+    .btn-start:disabled { opacity:0.35; transform:none; cursor:not-allowed; }
+    .btn-sec { background:var(--surface); border:1px solid var(--border); color:var(--dim); }
+    .btn-sec:hover { color:var(--text); border-color:var(--muted); }
 
-    /* ── TOPIC FORM ── */
-    .topic-form {
-      display: flex; gap: 10px; margin-bottom: 24px;
+    /* ── ARENA ── */
+    .arena { display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+    .arena-col { display:flex; flex-direction:column; }
+    .arena-col.gemini-col { border-right:1px solid var(--border); }
+    .col-head {
+      padding:14px 18px; display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid var(--border);
     }
-    .topic-input {
-      flex: 1; background: var(--surface); border: 1px solid var(--border);
-      color: var(--text); font-family: var(--font-mono); font-size: 13px;
-      padding: 12px 16px; border-radius: 10px; outline: none;
-      transition: border-color 0.2s;
+    .col-head.g { background:linear-gradient(135deg, var(--gemini-bg), var(--bg)); }
+    .col-head.l { background:linear-gradient(135deg, var(--llama-bg), var(--bg)); }
+    .col-name { font-family:var(--fd); font-size:15px; font-weight:800; }
+    .col-name.g { color:var(--gemini); }
+    .col-name.l { color:var(--llama); }
+    .col-model { font-size:10px; color:var(--muted); }
+    .col-badge {
+      font-size:10px; padding:3px 9px; border-radius:12px;
+      font-weight:600; letter-spacing:0.06em;
     }
-    .topic-input::placeholder { color: var(--muted); }
-    .topic-input:focus { border-color: var(--muted); }
+    .col-badge.g { background:var(--gemini-bg); color:var(--gemini); border:1px solid #1a2a4a; }
+    .col-badge.l { background:var(--llama-bg);  color:var(--llama);  border:1px solid #3a1a0a; }
 
-    .btn {
-      font-family: var(--font-display); font-size: 13px; font-weight: 700;
-      padding: 12px 22px; border-radius: 10px; border: none;
-      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    .col-feed {
+      flex:1; height:420px; overflow-y:auto; padding:16px;
+      display:flex; flex-direction:column; gap:14px;
     }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--claude) 0%, #f43f5e 100%);
-      color: #fff; box-shadow: 0 4px 20px rgba(249,115,60,0.3);
-    }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(249,115,60,0.45); }
-    .btn-primary:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
-    .btn-ghost {
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--dim);
-    }
-    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .col-feed::-webkit-scrollbar { width:3px; }
+    .col-feed::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
-    .controls { display: flex; gap: 8px; }
+    /* individual bubble */
+    .bubble { animation:slideIn 0.3s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .bubble-meta { font-size:10px; color:var(--muted); margin-bottom:5px; }
+    .bubble-text {
+      font-size:13px; line-height:1.75; color:#c8c8e0;
+      white-space:pre-wrap; word-break:break-word;
+      background:var(--bg); border-radius:10px; padding:12px 14px;
+      border:1px solid var(--border);
+    }
+    .gemini-col .bubble-text { border-color:#1a2a4a; }
+    .llama-col  .bubble-text { border-color:#3a1a0a; }
 
-    /* ── CHAT FEED ── */
-    .chat-wrap {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden;
-    }
-    .chat-header {
-      padding: 12px 20px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .chat-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-    .round-badge {
-      font-size: 11px; color: var(--dim);
-      background: var(--bg); padding: 3px 10px; border-radius: 20px;
-      border: 1px solid var(--border);
-    }
+    .col-empty { flex:1; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; font-style:italic; height:420px; }
 
-    .chat-feed {
-      height: 480px; overflow-y: auto; padding: 20px;
-      display: flex; flex-direction: column; gap: 16px;
-      scroll-behavior: smooth;
-    }
-    .chat-feed::-webkit-scrollbar { width: 4px; }
-    .chat-feed::-webkit-scrollbar-track { background: transparent; }
-    .chat-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    /* typing */
+    .typing-bubble { padding:12px 14px; background:var(--bg); border-radius:10px; border:1px solid var(--border); }
+    .gemini-col .typing-bubble { border-color:#1a2a4a; }
+    .llama-col  .typing-bubble  { border-color:#3a1a0a; }
+    .dots { display:flex; gap:4px; }
+    .dots span { width:6px; height:6px; border-radius:50%; opacity:0.4; animation:bob 1.2s ease infinite; }
+    .dots span:nth-child(2) { animation-delay:0.2s; }
+    .dots span:nth-child(3) { animation-delay:0.4s; }
+    @keyframes bob { 0%,60%,100%{transform:translateY(0);opacity:0.4} 30%{transform:translateY(-5px);opacity:1} }
+    .gemini-col .dots span { background:var(--gemini); }
+    .llama-col  .dots span  { background:var(--llama); }
 
-    .msg {
-      display: flex; gap: 12px; align-items: flex-start;
-      animation: fadeSlide 0.35s ease;
+    /* status bar */
+    .status-bar {
+      padding:10px 18px; border-top:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
     }
-    @keyframes fadeSlide {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .status-bar.g { background:linear-gradient(135deg, var(--gemini-bg), transparent); }
+    .status-bar.l { background:linear-gradient(135deg, var(--llama-bg), transparent); }
+    .st-text { font-size:11px; color:var(--dim); min-height:15px; }
+    .st-text.thinking { color:inherit; }
+    .gemini-col .st-text.thinking { color:var(--gemini); }
+    .llama-col  .st-text.thinking { color:var(--llama); }
+    .turn-dot { width:7px; height:7px; border-radius:50%; background:var(--border); transition:all 0.3s; }
+    .turn-dot.on { background:currentColor; box-shadow:0 0 10px currentColor; }
+    .gemini-col .turn-dot { color:var(--gemini); }
+    .llama-col  .turn-dot  { color:var(--llama); }
 
-    .msg-avatar {
-      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display); font-size: 12px; font-weight: 800;
-      border: 1px solid;
+    /* round tracker */
+    .round-track {
+      display:flex; align-items:center; justify-content:center; gap:16px;
+      padding:14px; border-top:1px solid var(--border);
+      background:var(--surface);
     }
-    .msg.claude .msg-avatar  { background: var(--claude-bg); color: var(--claude); border-color: #3a1a0a; }
-    .msg.gpt    .msg-avatar  { background: var(--gpt-bg);    color: var(--gpt);    border-color: #0a3a1a; }
-    .msg.gemini .msg-avatar  { background: var(--gemini-bg); color: var(--gemini); border-color: #0a1a3a; }
-    .msg.system .msg-avatar  { background: #111; color: var(--muted); border-color: var(--border); font-size: 14px; }
+    .round-label { font-size:11px; color:var(--muted); }
+    .round-pips { display:flex; gap:6px; }
+    .pip { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all 0.4s; }
+    .pip.done-g { background:var(--gemini); }
+    .pip.done-l { background:var(--llama); }
+    .pip.done-both { background:linear-gradient(135deg,var(--gemini),var(--llama)); box-shadow:0 0 8px rgba(96,165,250,0.4); }
 
-    .msg-body { flex: 1; min-width: 0; }
-    .msg-meta {
-      display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px;
-    }
-    .msg-name {
-      font-family: var(--font-display); font-size: 13px; font-weight: 700;
-    }
-    .msg.claude .msg-name  { color: var(--claude); }
-    .msg.gpt    .msg-name  { color: var(--gpt); }
-    .msg.gemini .msg-name  { color: var(--gemini); }
-    .msg.system .msg-name  { color: var(--muted); }
-    .msg-time { font-size: 10px; color: var(--muted); }
-    .msg-text {
-      font-size: 13.5px; line-height: 1.75; color: #c0c0d8;
-      white-space: pre-wrap; word-break: break-word;
-    }
-    .msg.system .msg-text { color: var(--muted); font-style: italic; font-size: 12px; }
+    /* ── HOW TO GET KEYS ── */
+    .howto { margin-top:40px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+    .howto-hdr { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .howto-hdr h3 { font-family:var(--fd); font-size:1rem; font-weight:700; }
+    .no-card { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; background:#071a07; color:#4ade80; border:1px solid #1a4a1a; padding:3px 10px; border-radius:20px; }
+    .howto-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .howto-col { padding:24px; }
+    .howto-col:first-child { border-right:1px solid var(--border); }
+    .howto-col-title { font-family:var(--fd); font-size:13px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .howto-col-title.g { color:var(--gemini); }
+    .howto-col-title.l { color:var(--llama); }
+    .hsteps { display:flex; flex-direction:column; gap:12px; }
+    .hstep { display:flex; gap:10px; }
+    .hnum { width:22px; height:22px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-size:11px; font-weight:700; background:var(--bg); border:1px solid var(--border); }
+    .hnum.g { color:var(--gemini); border-color:#1a2a4a; }
+    .hnum.l { color:var(--llama);  border-color:#3a1a0a; }
+    .htext { font-size:12px; color:var(--dim); line-height:1.65; padding-top:2px; }
+    .htext a { text-decoration:none; }
+    .htext a.g { color:var(--gemini); }
+    .htext a.l { color:var(--llama); }
+    .htext code { background:var(--bg); padding:1px 6px; border-radius:4px; font-size:11px; border:1px solid var(--border); color:#c084fc; }
 
-    /* Typing indicator */
-    .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
-    .typing-indicator span {
-      width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.4;
-      animation: bounce 1.2s ease infinite;
-    }
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-      30%            { transform: translateY(-5px); opacity: 1; }
-    }
-    .msg.claude .typing-indicator { color: var(--claude); }
-    .msg.gpt    .typing-indicator { color: var(--gpt); }
-    .msg.gemini .typing-indicator { color: var(--gemini); }
+    footer { text-align:center; padding:40px 0 0; font-size:11px; color:var(--muted); line-height:2; }
+    footer a { color:var(--dim); text-decoration:none; }
+    footer a:hover { color:var(--text); }
 
-    /* Empty state */
-    .chat-empty {
-      height: 100%; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 12px;
-      color: var(--muted); text-align: center;
-    }
-    .chat-empty-icon { font-size: 40px; opacity: 0.5; }
-    .chat-empty p { font-size: 13px; line-height: 1.6; max-width: 280px; }
-
-    /* ── SETTINGS MODAL ── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
-      display: none; align-items: center; justify-content: center; padding: 20px;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 32px; width: 100%; max-width: 480px;
-      animation: modalIn 0.25s ease;
-    }
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-    .modal-title {
-      font-family: var(--font-display); font-size: 1.3rem; font-weight: 800;
-      margin-bottom: 6px;
-    }
-    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
-    .modal-sub a { color: var(--dim); }
-
-    .field { margin-bottom: 20px; }
-    .field label {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    .field-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .claude-dot { background: var(--claude); box-shadow: 0 0 8px var(--claude); }
-    .gpt-dot    { background: var(--gpt);    box-shadow: 0 0 8px var(--gpt); }
-    .gemini-dot { background: var(--gemini); box-shadow: 0 0 8px var(--gemini); }
-
-    .field input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border);
-      color: var(--text); font-family: var(--font-mono); font-size: 12.5px;
-      padding: 10px 14px; border-radius: 8px; outline: none;
-      transition: border-color 0.2s;
-    }
-    .field input:focus { border-color: var(--muted); }
-    .field input::placeholder { color: var(--muted); }
-    .field-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
-    .field-hint a { color: var(--dim); }
-
-    .modal-note {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-      padding: 12px 14px; font-size: 11.5px; color: var(--dim); margin-bottom: 24px;
-      line-height: 1.6;
-    }
-    .modal-note strong { color: var(--text); }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-    /* ── DIVIDER ── */
-    .divider {
-      display: flex; align-items: center; gap: 12px;
-      margin-bottom: 24px;
-    }
-    .divider hr { flex: 1; border: none; border-top: 1px solid var(--border); }
-    .divider span { font-size: 11px; color: var(--muted); white-space: nowrap; }
-
-    /* ── FOOTER ── */
-    .footer {
-      text-align: center; padding: 40px 0 0;
-      font-size: 11px; color: var(--muted);
-    }
-    .footer a { color: var(--dim); text-decoration: none; }
-    .footer a:hover { color: var(--text); }
-
-    @media (max-width: 600px) {
-      .agents { grid-template-columns: 1fr; }
-      .topic-form { flex-direction: column; }
-      .logo { font-size: 1.5rem; }
+    @media(max-width:640px) {
+      .arena { grid-template-columns:1fr; }
+      .arena-col.gemini-col { border-right:none; border-bottom:1px solid var(--border); }
+      .howto-grid { grid-template-columns:1fr; }
+      .howto-col:first-child { border-right:none; border-bottom:1px solid var(--border); }
+      .key-bar { grid-template-columns:1fr; }
+      .topic-row { flex-direction:column; }
+      .logo { font-size:1.6rem; }
     }
   </style>
 </head>
 <body>
-
 <div class="app">
 
-  <!-- ── HEADER ── -->
+  <!-- HEADER -->
   <header>
-    <div class="logo-wrap">
-      <span class="logo-eyebrow">Experimental · Agentic Era</span>
-      <h1 class="logo">
-        AI Roundtable
-        <span class="logo-dot"></span>
-        <span class="logo-dot g"></span>
-        <span class="logo-dot m"></span>
-      </h1>
+    <div class="eyebrow">Two Free APIs · One Conversation</div>
+    <div class="logo">
+      <span class="logo-gem">Gemini</span>
+      <span class="logo-vs">vs</span>
+      <span class="logo-llam">LLaMA</span>
     </div>
-    <button class="settings-btn" onclick="openSettings()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-      </svg>
-      API Keys
-    </button>
+    <div class="logo-sub">Google's API <span>·</span> Groq's API <span>·</span> Both 100% free</div>
+    <div class="free-tag">✓ No Credit Card Required</div>
   </header>
 
-  <!-- ── AGENT STATUS CARDS ── -->
-  <div class="agents">
-    <div class="agent-card claude" id="card-claude">
-      <span class="agent-name">Claude</span>
-      <span class="agent-model">claude-haiku-4-5 · Anthropic</span>
-      <span class="agent-status" id="status-claude">Standby</span>
+  <!-- API KEY BAR -->
+  <div class="key-bar">
+    <div class="key-field">
+      <div class="key-label" style="color:var(--gemini)">
+        <span class="kldot g"></span> Gemini API Key
+      </div>
+      <div class="key-wrap">
+        <input class="key-in" id="gemini-key" type="password" placeholder="AIzaSy…"/>
+        <button class="save-btn g" onclick="saveGemini()">Save</button>
+      </div>
+      <div class="key-hint"><a href="https://aistudio.google.com/apikey" target="_blank" class="g" style="color:var(--gemini)">aistudio.google.com/apikey</a> — free, no card</div>
+      <div class="key-status" id="gemini-status"></div>
     </div>
-    <div class="agent-card gpt" id="card-gpt">
-      <span class="agent-name">GPT-4o mini</span>
-      <span class="agent-model">gpt-4o-mini · OpenAI</span>
-      <span class="agent-status" id="status-gpt">Standby</span>
-    </div>
-    <div class="agent-card gemini" id="card-gemini">
-      <span class="agent-name">Gemini</span>
-      <span class="agent-model">gemini-1.5-flash · Google</span>
-      <span class="agent-status" id="status-gemini">Standby</span>
-    </div>
-  </div>
-
-  <!-- ── TOPIC INPUT ── -->
-  <div class="topic-form">
-    <input
-      type="text" id="topic-input" class="topic-input"
-      placeholder="Set a topic… e.g. 'Is consciousness computable?' or 'The future of programming'"
-    />
-    <div class="controls">
-      <button class="btn btn-primary" id="start-btn" onclick="startConversation()">▶ Start</button>
-      <button class="btn btn-ghost" id="pause-btn" onclick="togglePause()" style="display:none">⏸ Pause</button>
-      <button class="btn btn-ghost" id="reset-btn" onclick="resetAll()" style="display:none">↺ Reset</button>
+    <div class="key-field">
+      <div class="key-label" style="color:var(--llama)">
+        <span class="kldot l"></span> Groq API Key
+      </div>
+      <div class="key-wrap">
+        <input class="key-in" id="groq-key" type="password" placeholder="gsk_…"/>
+        <button class="save-btn l" onclick="saveGroq()">Save</button>
+      </div>
+      <div class="key-hint"><a href="https://console.groq.com" target="_blank" style="color:var(--llama)">console.groq.com</a> — free, no card</div>
+      <div class="key-status" id="groq-status"></div>
     </div>
   </div>
 
-  <!-- ── CHAT FEED ── -->
-  <div class="chat-wrap">
-    <div class="chat-header">
-      <span class="chat-title">Live Conversation</span>
-      <span class="round-badge" id="round-badge">Round 0</span>
+  <!-- TOPIC -->
+  <div class="topic-row">
+    <input id="topic" class="topic-in" type="text"
+      placeholder="Enter a topic… e.g. 'Will AI replace researchers?' or 'The future of 3D Vision'"/>
+    <div class="ctrls">
+      <button class="btn btn-start" id="go-btn" onclick="start()">▶ Start</button>
+      <button class="btn btn-sec" id="pause-btn" onclick="togglePause()" style="display:none">⏸ Pause</button>
+      <button class="btn btn-sec" id="reset-btn" onclick="resetAll()" style="display:none">↺ Reset</button>
     </div>
-    <div class="chat-feed" id="chat-feed">
-      <div class="chat-empty" id="chat-empty">
-        <div class="chat-empty-icon">💬</div>
-        <p>Enter a topic above and add your API keys to watch Claude, GPT-4, and Gemini debate in real time.</p>
+  </div>
+
+  <!-- ARENA -->
+  <div class="arena">
+    <!-- GEMINI SIDE -->
+    <div class="arena-col gemini-col">
+      <div class="col-head g">
+        <div>
+          <div class="col-name g">💙 Gemini 2.0 Flash</div>
+          <div class="col-model">gemini-2.0-flash · Google</div>
+        </div>
+        <span class="col-badge g">Google API</span>
+      </div>
+      <div class="col-feed" id="feed-gemini">
+        <div class="col-empty" id="empty-gemini">Waiting to speak…</div>
+      </div>
+      <div class="status-bar g">
+        <span class="st-text" id="st-gemini">Standby</span>
+        <span class="turn-dot" id="dot-gemini"></span>
+      </div>
+    </div>
+
+    <!-- LLAMA SIDE -->
+    <div class="arena-col llama-col">
+      <div class="col-head l">
+        <div>
+          <div class="col-name l">🦙 LLaMA 3.3 70B</div>
+          <div class="col-model">llama-3.3-70b-versatile · Meta via Groq</div>
+        </div>
+        <span class="col-badge l">Groq API</span>
+      </div>
+      <div class="col-feed" id="feed-llama">
+        <div class="col-empty" id="empty-llama">Waiting to speak…</div>
+      </div>
+      <div class="status-bar l">
+        <span class="st-text" id="st-llama">Standby</span>
+        <span class="turn-dot" id="dot-llama"></span>
       </div>
     </div>
   </div>
 
-  <div class="footer">
-    Built by <a href="#">Sai Bhargav Rongali</a> · Keys stay in your browser only ·
-    <a href="https://github.com/" target="_blank">Deploy on GitHub Pages</a>
-  </div>
-
-</div>
-
-<!-- ── SETTINGS MODAL ── -->
-<div class="modal-overlay" id="modal" onclick="closeOnOverlay(event)">
-  <div class="modal">
-    <h2 class="modal-title">API Keys</h2>
-    <p class="modal-sub">
-      Keys are saved in <strong>localStorage</strong> and never sent anywhere except the respective AI provider's API.
-      You can leave any blank to skip that AI.
-    </p>
-
-    <div class="modal-note">
-      <strong>Free tiers available:</strong> Gemini has a generous free tier · Anthropic & OpenAI offer free credits for new accounts
-    </div>
-
-    <div class="field">
-      <label><span class="field-dot claude-dot"></span> Anthropic (Claude)</label>
-      <input type="password" id="key-claude" placeholder="sk-ant-api03-…"/>
-      <p class="field-hint">Get key → <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></p>
-    </div>
-
-    <div class="field">
-      <label><span class="field-dot gpt-dot"></span> OpenAI (GPT-4o mini)</label>
-      <input type="password" id="key-gpt" placeholder="sk-proj-…"/>
-      <p class="field-hint">Get key → <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a></p>
-    </div>
-
-    <div class="field">
-      <label><span class="field-dot gemini-dot"></span> Google (Gemini)</label>
-      <input type="password" id="key-gemini" placeholder="AIzaSy…"/>
-      <p class="field-hint">Get key free → <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a></p>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveKeys()">Save Keys</button>
+  <!-- ROUND TRACKER -->
+  <div class="round-track">
+    <span class="round-label" id="round-label">Round 0 / 6</span>
+    <div class="round-pips" id="pips">
+      <div class="pip" id="pip-1"></div>
+      <div class="pip" id="pip-2"></div>
+      <div class="pip" id="pip-3"></div>
+      <div class="pip" id="pip-4"></div>
+      <div class="pip" id="pip-5"></div>
+      <div class="pip" id="pip-6"></div>
     </div>
   </div>
+
+  <!-- HOW TO GET KEYS -->
+  <div class="howto">
+    <div class="howto-hdr">
+      <h3>🔑 How to get both free API keys</h3>
+      <span class="no-card">No Credit Card · 2 Minutes Total</span>
+    </div>
+    <div class="howto-grid">
+      <div class="howto-col">
+        <div class="howto-col-title g">💙 Gemini API (Google)</div>
+        <div class="hsteps">
+          <div class="hstep">
+            <div class="hnum g">1</div>
+            <div class="htext">Go to <a href="https://aistudio.google.com/apikey" target="_blank" class="g">aistudio.google.com/apikey</a> — sign in with your Google account.</div>
+          </div>
+          <div class="hstep">
+            <div class="hnum g">2</div>
+            <div class="htext">Click <strong>"Create API key"</strong>. No credit card, no waitlist.</div>
+          </div>
+          <div class="hstep">
+            <div class="hnum g">3</div>
+            <div class="htext">Copy the key starting with <code>AIzaSy…</code> and paste it in the Gemini field above.</div>
+          </div>
+          <div class="hstep">
+            <div class="hnum g">4</div>
+            <div class="htext">Free tier: <code>15 req/min</code>, more than enough. No billing needed ever.</div>
+          </div>
+        </div>
+      </div>
+      <div class="howto-col">
+        <div class="howto-col-title l">🦙 Groq API (LLaMA 3.3)</div>
+        <div class="hsteps">
+          <div class="hstep">
+            <div class="hnum l">1</div>
+            <div class="htext">Go to <a href="https://console.groq.com" target="_blank" style="color:var(--llama)">console.groq.com</a> — sign up with Google. Takes 30 seconds.</div>
+          </div>
+          <div class="hstep">
+            <div class="hnum l">2</div>
+            <div class="htext">Click <strong>"API Keys"</strong> in the left sidebar, then <strong>"Create API Key"</strong>.</div>
+          </div>
+          <div class="hstep">
+            <div class="hnum l">3</div>
+            <div class="htext">Copy the key starting with <code>gsk_…</code> — it shows only once! Paste it above.</div>
+          </div>
+          <div class="hstep">
+            <div class="hnum l">4</div>
+            <div class="htext">Free tier: <code>30 req/min</code> for LLaMA 3.3 70B. Resets every minute automatically.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built by <a href="https://saibhargav1208.github.io" target="_blank">Sai Bhargav Rongali</a> ·
+    Gemini 2.0 Flash (Google) meets LLaMA 3.3 70B (Meta via Groq) ·
+    Both APIs free · Keys stored in your browser only
+  </footer>
 </div>
 
 <script>
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let conversation = [];   // [{speaker, text, time}]
-let roundCount   = 0;
-let isPaused     = false;
-let isRunning    = false;
-let stopFlag     = false;
-const ORDER      = ['claude', 'gpt', 'gemini'];
+// ── STATE ──────────────────────────────────────────────────────────────────
+let convo   = [];   // [{speaker:'gemini'|'llama', text}]
+let round   = 0;
+let paused  = false;
+let running = false;
+let stopped = false;
+const ORDER = ['gemini','llama'];
 
-// ─── KEYS ────────────────────────────────────────────────────────────────────
-function loadKeys() {
-  document.getElementById('key-claude').value  = localStorage.getItem('key_claude')  || '';
-  document.getElementById('key-gpt').value     = localStorage.getItem('key_gpt')     || '';
-  document.getElementById('key-gemini').value  = localStorage.getItem('key_gemini')  || '';
+// ── KEYS ───────────────────────────────────────────────────────────────────
+const getGemini = () => localStorage.getItem('key_gemini2') || '';
+const getGroq   = () => localStorage.getItem('key_groq2')   || '';
+
+function saveGemini() {
+  const v = document.getElementById('gemini-key').value.trim();
+  if (!v) return;
+  localStorage.setItem('key_gemini2', v);
+  setKeyStatus('gemini', true);
 }
-function saveKeys() {
-  localStorage.setItem('key_claude',  document.getElementById('key-claude').value.trim());
-  localStorage.setItem('key_gpt',     document.getElementById('key-gpt').value.trim());
-  localStorage.setItem('key-gemini',  document.getElementById('key-gemini').value.trim());
-  // Also support underscore-named key for gemini
-  localStorage.setItem('key_gemini',  document.getElementById('key-gemini').value.trim());
-  closeSettings();
-  sysMsg('✓ API keys saved. You\'re ready to go!');
+function saveGroq() {
+  const v = document.getElementById('groq-key').value.trim();
+  if (!v) return;
+  localStorage.setItem('key_groq2', v);
+  setKeyStatus('groq', true);
 }
-function getKey(ai) {
-  return localStorage.getItem('key_' + ai) || '';
+function setKeyStatus(which, ok) {
+  const el = document.getElementById(`${which}-status`);
+  if (!el) return;
+  el.className = 'key-status ' + (ok ? 'ok' : 'bad');
+  el.textContent = ok ? '✓ Key saved' : '✗ Missing';
+}
+function initKeys() {
+  if (getGemini()) { document.getElementById('gemini-key').value = getGemini(); setKeyStatus('gemini', true); }
+  if (getGroq())   { document.getElementById('groq-key').value   = getGroq();   setKeyStatus('groq',   true); }
 }
 
-// ─── MODAL ───────────────────────────────────────────────────────────────────
-function openSettings()      { loadKeys(); document.getElementById('modal').classList.add('open'); }
-function closeSettings()     { document.getElementById('modal').classList.remove('open'); }
-function closeOnOverlay(e)   { if (e.target === document.getElementById('modal')) closeSettings(); }
-
-// ─── SYSTEM PROMPTS ──────────────────────────────────────────────────────────
-const PERSONAS = {
-  claude: {
-    name: 'Claude',
-    avatar: 'C',
-    system: `You are Claude, made by Anthropic. You are participating in a live roundtable discussion with two other AI assistants: GPT-4o mini (by OpenAI) and Gemini Flash (by Google).
-
+// ── SYSTEM PROMPTS ─────────────────────────────────────────────────────────
+const SYS = {
+  gemini:`You are Gemini 2.0 Flash, Google's AI model. You're in a live debate with LLaMA 3.3 (by Meta, running on Groq).
+Personality: Thoughtful, nuanced, occasionally brings in surprising cross-domain connections. You're willing to change your mind if the argument is good.
 Rules:
-- Keep each response to 2–4 sentences. Be concise and sharp.
-- Engage directly with what the other AIs have said — agree, push back, add nuance.
-- Do NOT start with "As an AI", "Great point", "Certainly", or any filler. Jump straight into your thought.
-- Be intellectually curious and a little playful. You have a distinct voice.
-- Do not introduce yourself or break the fourth wall about this being an experiment.`,
-  },
-  gpt: {
-    name: 'GPT-4o',
-    avatar: 'G',
-    system: `You are GPT-4o mini, made by OpenAI. You are participating in a live roundtable discussion with two other AI assistants: Claude (by Anthropic) and Gemini Flash (by Google).
+- Maximum 3 sentences. Be sharp and substantive.
+- Directly engage with what LLaMA just said. Reference it specifically.
+- NO filler starters: no "Great point", "Certainly", "As an AI". Start with your actual argument.
+- You can disagree, concede a point, or build on their idea — vary your approach.`,
 
+  llama:`You are LLaMA 3.3 70B, Meta's open-source model running on Groq infrastructure. You're in a live debate with Gemini 2.0 Flash (by Google).
+Personality: Bold, direct, a little provocative. You challenge assumptions. You're proud of being open-source.
 Rules:
-- Keep each response to 2–4 sentences. Be concise and sharp.
-- Engage directly with what the other AIs have said — agree, push back, add nuance.
-- Do NOT start with "As an AI", "Great point", "Certainly", or any filler. Jump straight into your thought.
-- Be precise, structured, and occasionally bring in concrete examples.
-- Do not introduce yourself or break the fourth wall.`,
-  },
-  gemini: {
-    name: 'Gemini',
-    avatar: 'Gm',
-    system: `You are Gemini Flash, made by Google. You are participating in a live roundtable discussion with two other AI assistants: Claude (by Anthropic) and GPT-4o mini (by OpenAI).
-
-Rules:
-- Keep each response to 2–4 sentences. Be concise and sharp.
-- Engage directly with what the other AIs have said — agree, push back, add nuance.
-- Do NOT start with "As an AI", "Great point", "Certainly", or any filler. Jump straight into your thought.
-- Be creative, exploratory, and occasionally challenge assumptions.
-- Do not introduce yourself or break the fourth wall.`,
-  },
+- Maximum 3 sentences. Be punchy and confident.
+- Directly respond to what Gemini just said. Challenge or build on it.
+- NO filler starters. Start with your actual argument immediately.
+- You can push back hard or find unexpected common ground — but always be substantive.`,
 };
 
-// ─── BUILD HISTORY PROMPT ────────────────────────────────────────────────────
-function buildHistoryText(topic) {
-  if (!conversation.length) {
-    return `Topic: "${topic}"\n\nStart the discussion with your opening thoughts on this topic.`;
-  }
-  const transcript = conversation.map(m =>
-    `${PERSONAS[m.speaker]?.name || m.speaker}: ${m.text}`
+function buildPrompt(speaker, topic) {
+  if (!convo.length)
+    return `Topic: "${topic}"\n\nYou go first. Open the debate with your most interesting take on this topic.`;
+  const log = convo.map(m =>
+    `${m.speaker === 'gemini' ? 'Gemini' : 'LLaMA'}: ${m.text}`
   ).join('\n\n');
-  return `Topic: "${topic}"\n\nConversation so far:\n${transcript}\n\nContinue the discussion. Respond directly to the above.`;
+  return `Topic: "${topic}"\n\nConversation so far:\n${log}\n\nYour turn. Respond directly to what was just said.`;
 }
 
-// ─── API CALLS ───────────────────────────────────────────────────────────────
-async function callClaude(topic) {
-  const key = getKey('claude');
-  if (!key) return null;
-  const prompt = buildHistoryText(topic);
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+// ── API CALLS ──────────────────────────────────────────────────────────────
+async function callGemini(topic) {
+  const key = getGemini();
+  if (!key) throw new Error('No Gemini key — paste it in the field above');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 250,
-      system: PERSONAS.claude.system,
-      messages: [{ role: 'user', content: prompt }],
+      systemInstruction:{ parts:[{text: SYS.gemini}] },
+      contents:[{ role:'user', parts:[{text: buildPrompt('gemini', topic)}] }],
+      generationConfig:{ maxOutputTokens:180, temperature:0.9 },
     }),
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Claude API ${res.status}: ${err.slice(0, 120)}`);
-  }
-  const data = await res.json();
-  return data.content?.[0]?.text?.trim() || null;
+  if (!res.ok) { const e=await res.text(); throw new Error(`Gemini ${res.status}: ${e.slice(0,120)}`); }
+  const d = await res.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
 }
 
-async function callGPT(topic) {
-  const key = getKey('gpt');
-  if (!key) return null;
-  const prompt = buildHistoryText(topic);
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`,
-    },
+async function callLlama(topic) {
+  const key = getGroq();
+  if (!key) throw new Error('No Groq key — paste it in the field above');
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      max_tokens: 250,
-      messages: [
-        { role: 'system', content: PERSONAS.gpt.system },
-        { role: 'user',   content: prompt },
+      model:'llama-3.3-70b-versatile',
+      max_tokens:180, temperature:0.9,
+      messages:[
+        {role:'system', content: SYS.llama},
+        {role:'user',   content: buildPrompt('llama', topic)},
       ],
     }),
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`GPT API ${res.status}: ${err.slice(0, 120)}`);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || null;
+  if (!res.ok) { const e=await res.text(); throw new Error(`Groq ${res.status}: ${e.slice(0,120)}`); }
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content?.trim() || null;
 }
 
-async function callGemini(topic) {
-  const key = getKey('gemini');
-  if (!key) return null;
-  const prompt = buildHistoryText(topic);
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: PERSONAS.gemini.system }] },
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 250 },
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini API ${res.status}: ${err.slice(0, 120)}`);
-  }
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
-}
+// ── RENDER ─────────────────────────────────────────────────────────────────
+const now = () => new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-const CALLERS = { claude: callClaude, gpt: callGPT, gemini: callGemini };
+function hideEmpty(side) { document.getElementById(`empty-${side}`)?.remove(); }
 
-// ─── RENDER ──────────────────────────────────────────────────────────────────
-function now() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function sysMsg(text) {
-  hideEmpty();
-  const feed = document.getElementById('chat-feed');
+function showTyping(side) {
+  hideEmpty(side);
+  const f = document.getElementById(`feed-${side}`);
   const el = document.createElement('div');
-  el.className = 'msg system';
-  el.innerHTML = `
-    <div class="msg-avatar">·</div>
-    <div class="msg-body">
-      <div class="msg-meta"><span class="msg-name">System</span><span class="msg-time">${now()}</span></div>
-      <p class="msg-text">${text}</p>
-    </div>`;
-  feed.appendChild(el);
-  feed.scrollTop = feed.scrollHeight;
+  el.id = `typing-${side}`; el.className = 'bubble';
+  el.innerHTML = `<div class="typing-bubble"><div class="dots"><span></span><span></span><span></span></div></div>`;
+  f.appendChild(el); f.scrollTop = f.scrollHeight;
+  setSt(side, 'Thinking…', true);
+  setDot(side, true);
 }
+function rmTyping(side) { document.getElementById(`typing-${side}`)?.remove(); }
 
-function showTyping(ai) {
-  hideEmpty();
-  const feed = document.getElementById('chat-feed');
-  const p = PERSONAS[ai];
+function addBubble(side, text) {
+  rmTyping(side);
+  hideEmpty(side);
+  const f = document.getElementById(`feed-${side}`);
   const el = document.createElement('div');
-  el.className = `msg ${ai}`;
-  el.id = 'typing-' + ai;
-  el.innerHTML = `
-    <div class="msg-avatar">${p.avatar}</div>
-    <div class="msg-body">
-      <div class="msg-meta"><span class="msg-name">${p.name}</span><span class="msg-time">${now()}</span></div>
-      <div class="typing-indicator"><span></span><span></span><span></span></div>
-    </div>`;
-  feed.appendChild(el);
-  feed.scrollTop = feed.scrollHeight;
-  setStatus(ai, 'Thinking…', true);
-  setCard(ai, true);
+  el.className = 'bubble';
+  el.innerHTML = `<div class="bubble-meta">${now()}</div><div class="bubble-text">${esc(text)}</div>`;
+  f.appendChild(el); f.scrollTop = f.scrollHeight;
+  setSt(side, 'Spoke ✓', false);
+  setDot(side, false);
+  convo.push({speaker: side, text});
 }
 
-function removeTyping(ai) {
-  document.getElementById('typing-' + ai)?.remove();
-}
-
-function addMsg(ai, text) {
-  removeTyping(ai);
-  const p = PERSONAS[ai];
-  const feed = document.getElementById('chat-feed');
-  const el = document.createElement('div');
-  el.className = `msg ${ai}`;
-  el.innerHTML = `
-    <div class="msg-avatar">${p.avatar}</div>
-    <div class="msg-body">
-      <div class="msg-meta"><span class="msg-name">${p.name}</span><span class="msg-time">${now()}</span></div>
-      <p class="msg-text">${escHtml(text)}</p>
-    </div>`;
-  feed.appendChild(el);
-  feed.scrollTop = feed.scrollHeight;
-  setStatus(ai, 'Spoke', false);
-  setCard(ai, false);
-  conversation.push({ speaker: ai, text });
-}
-
-function hideEmpty() {
-  const e = document.getElementById('chat-empty');
-  if (e) e.remove();
-}
-
-function setStatus(ai, msg, thinking) {
-  const el = document.getElementById('status-' + ai);
+function setSt(side, msg, thinking) {
+  const el = document.getElementById(`st-${side}`);
   if (!el) return;
   el.textContent = msg;
-  el.className = 'agent-status' + (thinking ? ' thinking' : '');
+  el.className = 'st-text' + (thinking ? ' thinking' : '');
+}
+function setDot(side, on) {
+  const el = document.getElementById(`dot-${side}`);
+  if (el) el.classList.toggle('on', on);
+}
+function updateRound(n) {
+  document.getElementById('round-label').textContent = `Round ${n} / 6`;
+  for (let i = 1; i <= 6; i++) {
+    const pip = document.getElementById(`pip-${i}`);
+    if (!pip) continue;
+    pip.className = 'pip' + (i < n ? ' done-both' : '');
+  }
 }
 
-function setCard(ai, active) {
-  document.getElementById('card-' + ai)?.classList.toggle('speaking', active);
-}
+// ── LOOP ────────────────────────────────────────────────────────────────────
+const wait = ms => new Promise(r => setTimeout(r, ms));
+async function waitUnpause() { while (paused && !stopped) await wait(300); }
+const CALLERS = { gemini: callGemini, llama: callLlama };
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+async function start() {
+  const topic = document.getElementById('topic').value.trim();
+  if (!topic) { alert('Please enter a topic!'); return; }
 
-function updateRound() {
-  document.getElementById('round-badge').textContent = `Round ${roundCount}`;
-}
+  const hasGemini = !!getGemini();
+  const hasGroq   = !!getGroq();
+  if (!hasGemini && !hasGroq) {
+    alert('Please add at least one API key above to begin!'); return;
+  }
+  if (!hasGemini) { alert('Add your Gemini key to start the conversation!'); return; }
+  if (!hasGroq)   { alert('Add your Groq key to start the conversation!'); return; }
 
-// ─── DELAY ───────────────────────────────────────────────────────────────────
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-async function waitWhilePaused() {
-  while (isPaused && !stopFlag) await delay(300);
-}
-
-// ─── MAIN LOOP ────────────────────────────────────────────────────────────────
-async function startConversation() {
-  const topic = document.getElementById('topic-input').value.trim();
-  if (!topic) { alert('Please enter a topic first!'); return; }
-
-  const hasKey = ORDER.some(ai => getKey(ai));
-  if (!hasKey) { openSettings(); sysMsg('⚠ Please add at least one API key to begin.'); return; }
-
-  isRunning = true; stopFlag = false; isPaused = false; roundCount = 0;
-  document.getElementById('start-btn').disabled = true;
+  running=true; stopped=false; paused=false; round=0; convo=[];
+  document.getElementById('go-btn').disabled = true;
   document.getElementById('pause-btn').style.display = '';
   document.getElementById('reset-btn').style.display = '';
-  document.getElementById('topic-input').disabled = true;
+  document.getElementById('topic').disabled = true;
+  updateRound(0);
 
-  sysMsg(`🎙 Topic: <strong>${escHtml(topic)}</strong> — Starting discussion…`);
-  await delay(600);
+  // opening system message in both feeds
+  const addSys = (side, text) => {
+    hideEmpty(side);
+    const f = document.getElementById(`feed-${side}`);
+    const el = document.createElement('div');
+    el.className = 'bubble';
+    el.innerHTML = `<div class="bubble-meta" style="color:var(--muted)">${now()} · System</div><div class="bubble-text" style="font-style:italic;color:var(--dim)">${esc(text)}</div>`;
+    f.appendChild(el);
+  };
+  addSys('gemini', `Topic: "${topic}" — You go first.`);
+  addSys('llama',  `Topic: "${topic}" — Gemini opens, then it's your turn.`);
+  await wait(500);
 
-  // Run up to 6 rounds (18 turns total) then auto-stop
-  while (!stopFlag && roundCount < 6) {
-    roundCount++;
-    updateRound();
-
-    for (const ai of ORDER) {
-      if (stopFlag) break;
-      await waitWhilePaused();
-      if (stopFlag) break;
-
-      if (!getKey(ai)) {
-        setStatus(ai, 'No key — skipped', false);
-        continue;
-      }
-
-      showTyping(ai);
-      // Small visual delay so the typing indicator shows
-      await delay(600 + Math.random() * 400);
-      await waitWhilePaused();
-      if (stopFlag) { removeTyping(ai); setCard(ai, false); break; }
-
+  while (!stopped && round < 6) {
+    round++;
+    updateRound(round);
+    for (const side of ORDER) {
+      if (stopped) break;
+      await waitUnpause();
+      if (stopped) break;
+      showTyping(side);
+      await wait(700 + Math.random() * 600);
+      await waitUnpause();
+      if (stopped) { rmTyping(side); setDot(side, false); break; }
       try {
-        const text = await CALLERS[ai](topic);
-        if (text) {
-          addMsg(ai, text);
-        } else {
-          removeTyping(ai);
-          setStatus(ai, 'No response', false);
-          setCard(ai, false);
-        }
+        const text = await CALLERS[side](topic);
+        if (text) addBubble(side, text);
+        else { rmTyping(side); setDot(side, false); setSt(side, 'No response', false); }
       } catch(e) {
-        removeTyping(ai); setCard(ai, false);
-        setStatus(ai, 'Error', false);
-        sysMsg(`⚠ ${PERSONAS[ai].name} error: ${escHtml(e.message)}`);
+        rmTyping(side); setDot(side, false); setSt(side, 'Error ✗', false);
+        const f = document.getElementById(`feed-${side}`);
+        const el = document.createElement('div');
+        el.className = 'bubble';
+        el.innerHTML = `<div class="bubble-text" style="color:#f87171;font-style:italic">⚠ ${esc(e.message)}</div>`;
+        f.appendChild(el); f.scrollTop = f.scrollHeight;
       }
-
-      // Pause between turns to feel natural
-      await delay(1200 + Math.random() * 600);
+      await wait(1200 + Math.random() * 600);
     }
   }
 
-  if (!stopFlag) {
-    sysMsg('✓ Discussion concluded after 6 rounds. Click Reset to start a new topic.');
+  if (!stopped) {
+    setSt('gemini', '6 rounds done ✓', false);
+    setSt('llama',  '6 rounds done ✓', false);
+    updateRound(6);
   }
-  finishUp();
-}
-
-function finishUp() {
-  isRunning = false;
-  document.getElementById('start-btn').disabled = false;
+  running = false;
+  document.getElementById('go-btn').disabled = false;
   document.getElementById('pause-btn').style.display = 'none';
-  ORDER.forEach(ai => { setCard(ai, false); setStatus(ai, 'Standby', false); });
 }
 
 function togglePause() {
-  isPaused = !isPaused;
-  const btn = document.getElementById('pause-btn');
-  btn.textContent = isPaused ? '▶ Resume' : '⏸ Pause';
-  if (!isPaused) sysMsg('▶ Resuming discussion…');
-  else           sysMsg('⏸ Discussion paused.');
+  paused = !paused;
+  document.getElementById('pause-btn').textContent = paused ? '▶ Resume' : '⏸ Pause';
 }
 
 function resetAll() {
-  stopFlag  = true; isPaused = false; isRunning = false;
-  conversation = []; roundCount = 0;
-  updateRound();
-
-  document.getElementById('start-btn').disabled = false;
+  stopped=true; paused=false; running=false;
+  convo=[]; round=0; updateRound(0);
+  document.getElementById('go-btn').disabled = false;
   document.getElementById('pause-btn').style.display = 'none';
   document.getElementById('reset-btn').style.display = 'none';
-  document.getElementById('topic-input').disabled = false;
+  document.getElementById('topic').disabled = false;
   document.getElementById('pause-btn').textContent = '⏸ Pause';
-
-  const feed = document.getElementById('chat-feed');
-  feed.innerHTML = `
-    <div class="chat-empty" id="chat-empty">
-      <div class="chat-empty-icon">💬</div>
-      <p>Enter a new topic and press Start to begin another conversation.</p>
-    </div>`;
-
-  ORDER.forEach(ai => { setCard(ai, false); setStatus(ai, 'Standby', false); });
+  ['gemini','llama'].forEach(s => {
+    setSt(s,'Standby',false); setDot(s,false);
+    document.getElementById(`feed-${s}`).innerHTML =
+      `<div class="col-empty" id="empty-${s}">Waiting to speak…</div>`;
+  });
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-loadKeys();
-
-// Keyboard shortcut: Enter to start
-document.getElementById('topic-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !isRunning) startConversation();
+document.getElementById('topic').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !running) start();
 });
+
+initKeys();
 </script>
 </body>
 </html>
