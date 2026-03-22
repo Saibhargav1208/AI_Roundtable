@@ -234,11 +234,9 @@
     <div class="chat-top">
       <span class="chat-top-left">Live Debate</span>
       <div class="round-track">
-        <span class="round-label" id="rlabel">Round 0 / 6</span>
+        <span class="round-label" id="rlabel">Round 0 / 10</span>
         <div class="pips">
-          <div class="pip" id="p1"></div><div class="pip" id="p2"></div>
-          <div class="pip" id="p3"></div><div class="pip" id="p4"></div>
-          <div class="pip" id="p5"></div><div class="pip" id="p6"></div>
+          <div class="pip" id="p1"></div><div class="pip" id="p2"></div><div class="pip" id="p3"></div><div class="pip" id="p4"></div><div class="pip" id="p5"></div><div class="pip" id="p6"></div><div class="pip" id="p7"></div><div class="pip" id="p8"></div><div class="pip" id="p9"></div><div class="pip" id="p10" title="Conclusion"></div>
         </div>
       </div>
     </div>
@@ -459,8 +457,8 @@ function setCard(id, on) {
   document.getElementById(`card-${id}`)?.classList.toggle('speaking', on);
 }
 function updateRound(n) {
-  document.getElementById('rlabel').textContent = `Round ${n} / 6`;
-  for (let i=1; i<=6; i++) {
+  document.getElementById('rlabel').textContent = `Round ${n} / 10`;
+  for (let i=1; i<=10; i++) {
     const p = document.getElementById(`p${i}`);
     if (p) p.className = 'pip' + (i <= n ? ' go' : '');
   }
@@ -482,10 +480,10 @@ async function startDebate() {
   document.getElementById('topic').disabled = true;
   updateRound(0);
 
-  sysmsg(`🎙 Topic: <strong>${esc(topic)}</strong> — 3 models, 6 rounds, let the debate begin!`);
+  sysmsg(`🎙 Topic: <strong>${esc(topic)}</strong> — 3 models, 9 rounds of debate + 1 conclusion round — let's go!`);
   await wait(500);
 
-  while (!stopped && round < 6) {
+  while (!stopped && round < 10) {
     round++; updateRound(round);
     for (const ag of AGENTS) {
       if (stopped) break;
@@ -506,10 +504,52 @@ async function startDebate() {
     }
   }
 
+  // CONCLUSION ROUND — each model gives final problem statement
   if (!stopped) {
-    sysmsg('✓ 6 rounds complete! Great debate. Hit Reset to try a new topic.');
-    AGENTS.forEach(ag => setSt(ag.id, 'Done', false));
-    updateRound(6);
+    updateRound(10);
+    sysmsg('🏁 <strong>Conclusion Round</strong> — Each model now states their final problem statement!');
+    await wait(600);
+    for (const ag of AGENTS) {
+      if (stopped) break;
+      showTyping(ag);
+      await wait(600);
+      try {
+        const topic = document.getElementById('topic').value.trim();
+        const log = convo.slice(-6).map(m => {
+          const a = AGENTS.find(x => x.id === m.id);
+          return a.name + ': ' + m.text;
+        }).join('
+
+');
+        const conclusionPrompt = 'Topic: "' + topic + '"
+
+Conversation so far:
+' + log + '
+
+This is the FINAL CONCLUSION round. Based on everything discussed, state ONE clear, concise problem statement (1-2 sentences max) that you believe best captures the core challenge. Start with "My final problem statement:"';
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + getKey() },
+          body: JSON.stringify({
+            model: ag.model, max_tokens: 150, temperature: 0.7,
+            messages: [
+              { role:'system', content: ag.system },
+              { role:'user', content: conclusionPrompt },
+            ],
+          }),
+        });
+        const d = await res.json();
+        const text = d.choices?.[0]?.message?.content?.trim();
+        if (text) addMsg(ag, text);
+        else { rmTyping(ag.id); setCard(ag.id, false); }
+      } catch(e) {
+        rmTyping(ag.id); setCard(ag.id, false);
+        sysmsg('⚠ ' + ag.name + ': ' + esc(e.message));
+      }
+      await wait(1500);
+    }
+    sysmsg('✅ Debate complete! 3 problem statements above. Hit Reset to try a new topic.');
+    AGENTS.forEach(ag => setSt(ag.id, 'Done ✓', false));
   }
   running = false;
   document.getElementById('go-btn').disabled = false;
