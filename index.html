@@ -7,151 +7,136 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-    :root {
-      --bg:#07070f; --surface:#0d0d18; --border:#1a1a2e; --muted:#44445a; --text:#e0e0f0; --dim:#6666a0;
-      --a:#f97316; --a-bg:#1a0e07; --a-b:#3a1a07;
-      --b:#60a5fa; --b-bg:#07101a; --b-b:#0a1a3a;
-      --c:#4ade80; --c-bg:#071a0e; --c-b:#0a3a1a;
-      --fd:'Syne',sans-serif; --fm:'DM Mono',monospace; --r:14px;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#07070f;--surface:#0d0d18;--border:#1a1a2e;--muted:#44445a;--text:#e0e0f0;--dim:#6666a0;
+      --a:#f97316;--a-bg:#1a0e07;--a-b:#3a1a07;
+      --b:#60a5fa;--b-bg:#07101a;--b-b:#0a1a3a;
+      --c:#4ade80;--c-bg:#071a0e;--c-b:#0a3a1a;
+      --fd:'Syne',sans-serif;--fm:'DM Mono',monospace;--r:14px
     }
-    body { font-family:var(--fm); background:var(--bg); color:var(--text); min-height:100vh; }
-    body::before {
-      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-      background-image:
-        linear-gradient(rgba(249,115,22,0.02) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(96,165,250,0.02) 1px,transparent 1px);
-      background-size:48px 48px;
-    }
-    .app { position:relative; z-index:1; max-width:980px; margin:0 auto; padding:0 20px 80px; }
-    header { padding:36px 0 28px; text-align:center; }
-    .eyebrow { font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
-    .logo { font-family:var(--fd); font-size:2.2rem; font-weight:800; line-height:1; margin-bottom:8px; }
-    .logo-sub { font-size:12px; color:var(--dim); font-family:var(--fm); }
-    .logo-sub strong { color:var(--a); }
-    .groq-badge { display:inline-flex; align-items:center; gap:7px; margin-top:14px; font-size:11px; font-family:var(--fm); letter-spacing:0.08em; background:linear-gradient(135deg,#1a0e07,#07101a); border:1px solid #2a1a0a; color:var(--a); padding:6px 16px; border-radius:20px; }
-    .gdot { width:7px; height:7px; border-radius:50%; background:var(--a); box-shadow:0 0 8px var(--a); animation:pulse 2s ease infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    .cfg-notice { font-size:11px; text-align:center; color:var(--muted); margin-bottom:16px; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
-    .cfg-notice.loaded { color:#4ade80; border-color:#1a4a1a; background:#071a07; }
-    .cfg-notice.failed { color:#f87171; border-color:#5a1a1a; background:#1a0707; }
-    .key-bar { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; margin-bottom:20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    .key-label { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
-    .key-wrap { flex:1; display:flex; gap:8px; min-width:240px; }
-    .key-in { flex:1; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:var(--fm); font-size:12.5px; padding:10px 14px; border-radius:8px; outline:none; transition:border-color 0.2s; }
-    .key-in:focus { border-color:var(--a); }
-    .key-in::placeholder { color:var(--muted); }
-    .save-key { font-family:var(--fd); font-size:12px; font-weight:700; padding:10px 18px; border-radius:8px; background:var(--a-bg); color:var(--a); border:1px solid var(--a-b); cursor:pointer; white-space:nowrap; transition:background 0.18s; }
-    .save-key:hover { background:#2a1208; }
-    #key-ok { font-size:11px; color:#4ade80; white-space:nowrap; display:none; }
-    .key-hint { font-size:11px; color:var(--muted); }
-    .key-hint a { color:var(--dim); text-decoration:none; }
-    .key-hint a:hover { color:var(--text); }
-    .agents { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
-    .ac { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; transition:border-color 0.3s,box-shadow 0.3s; }
-    .ac.speaking { border-color:var(--col); box-shadow:0 0 32px -6px var(--col); }
-    .ac-emoji { font-size:22px; margin-bottom:8px; }
-    .ac-name { font-family:var(--fd); font-size:14px; font-weight:700; color:var(--col); margin-bottom:2px; }
-    .ac-model { font-size:10px; color:var(--muted); margin-bottom:4px; }
-    .ac-role { font-size:11px; color:#50506a; font-style:italic; margin-bottom:6px; }
-    .ac-status { font-size:11px; color:var(--dim); min-height:15px; }
-    .topic-area { margin-bottom:20px; display:flex; flex-direction:column; gap:8px; }
-    .topic-row { display:flex; gap:10px; }
-    .topic-in { flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:var(--fm); font-size:13px; padding:13px 18px; border-radius:10px; outline:none; transition:border-color 0.2s; }
-    .topic-in::placeholder { color:var(--muted); }
-    .topic-in:focus { border-color:var(--dim); }
-    #topic-suggestions { background:var(--surface); border:1px solid var(--border); color:var(--dim); font-family:var(--fm); font-size:12px; padding:9px 14px; border-radius:8px; outline:none; cursor:pointer; width:100%; }
-    #topic-suggestions option { background:var(--bg); }
-    .ctrls { display:flex; gap:8px; }
-    .btn { font-family:var(--fd); font-size:13px; font-weight:700; padding:13px 22px; border-radius:10px; border:none; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
-    .btn-go { background:linear-gradient(135deg,var(--a),var(--b)); color:#fff; box-shadow:0 4px 20px rgba(249,115,22,0.25); }
-    .btn-go:hover { transform:translateY(-1px); box-shadow:0 6px 30px rgba(249,115,22,0.4); }
-    .btn-go:disabled { opacity:0.35; transform:none; cursor:not-allowed; }
-    .btn-sec { background:var(--surface); border:1px solid var(--border); color:var(--dim); }
-    .btn-sec:hover { color:var(--text); border-color:var(--muted); }
-    .btn-cont { background:var(--surface); border:1px solid #2a2a5a; color:#a0a0f0; }
-    .btn-cont:hover { color:var(--text); border-color:#6060c0; background:#12123a; }
-    .btn-conclude { background:#071a07; border:1px solid #1a4a1a; color:#4ade80; }
-    .btn-conclude:hover { background:#0d2a0d; border-color:#2a6a2a; }
-    .btn-conclude:disabled { opacity:0.4; cursor:not-allowed; }
-    .chat-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
-    .chat-top { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .chat-label { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
-    .round-track { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    #rlabel { font-size:11px; color:var(--dim); }
-    #pips { display:flex; gap:5px; flex-wrap:wrap; }
-    .pip { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all 0.4s; }
-    .pip.go { background:linear-gradient(135deg,var(--a),var(--b)); box-shadow:0 0 8px rgba(249,115,22,0.5); }
-    .pip.conclude { background:#4ade80 !important; }
-    .feed { height:520px; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
-    .feed::-webkit-scrollbar { width:3px; }
-    .feed::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-    .empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:var(--muted); text-align:center; padding:20px; }
-    .empty-icon { font-size:48px; opacity:0.5; }
-    .empty p { font-size:13px; line-height:1.75; max-width:340px; }
-    .empty code { color:var(--a); background:var(--bg); padding:1px 6px; border-radius:4px; border:1px solid var(--border); }
-    .msg { display:flex; gap:12px; align-items:flex-start; animation:fadeUp 0.3s ease; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    .av { width:36px; height:36px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid; }
-    .mbody { flex:1; min-width:0; }
-    .mmeta { display:flex; align-items:baseline; gap:8px; margin-bottom:5px; flex-wrap:wrap; }
-    .mname { font-family:var(--fd); font-size:13px; font-weight:700; }
-    .mtime { font-size:10px; color:var(--muted); }
-    .mtext { font-size:13.5px; line-height:1.8; color:#c0c0dc; white-space:pre-wrap; word-break:break-word; }
-    .conclusion-badge { font-size:10px; font-weight:600; background:#071a07; color:#4ade80; border:1px solid #1a4a1a; padding:2px 8px; border-radius:10px; }
-    .typing { display:flex; gap:5px; align-items:center; padding:6px 0; }
-    .typing span { width:7px; height:7px; border-radius:50%; opacity:0.3; animation:bob 1.2s ease infinite; }
-    .typing span:nth-child(2) { animation-delay:0.2s; }
-    .typing span:nth-child(3) { animation-delay:0.4s; }
-    @keyframes bob { 0%,60%,100%{transform:translateY(0);opacity:0.3} 30%{transform:translateY(-6px);opacity:1} }
-    .howto { margin-top:40px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
-    .howto-hdr { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    .howto-hdr h3 { font-family:var(--fd); font-size:1rem; font-weight:700; }
-    .free-pill { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; background:#071a07; color:#4ade80; border:1px solid #1a4a1a; padding:3px 12px; border-radius:20px; }
-    .steps { padding:28px; display:flex; flex-direction:column; }
-    .step { display:flex; gap:16px; padding-bottom:22px; position:relative; }
-    .step:last-child { padding-bottom:0; }
-    .step:not(:last-child)::before { content:''; position:absolute; left:15px; top:32px; width:1px; height:calc(100% - 10px); background:var(--border); }
-    .snum { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-size:13px; font-weight:700; color:var(--a); background:var(--bg); border:1px solid var(--a-b); position:relative; z-index:1; }
-    .sbody { flex:1; padding-top:5px; }
-    .stitle { font-family:var(--fd); font-size:14px; font-weight:600; margin-bottom:5px; }
-    .sdesc { font-size:12.5px; color:var(--dim); line-height:1.7; }
-    .sdesc a { color:var(--a); text-decoration:none; }
-    .sdesc a:hover { text-decoration:underline; }
-    .sdesc code { background:var(--bg); color:#c084fc; padding:1px 7px; border-radius:4px; border:1px solid var(--border); font-size:11.5px; }
-    .sbox { margin-top:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-size:12px; color:var(--muted); }
-    .cfg-docs { margin-top:24px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
-    .cfg-docs-hdr { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-    .cfg-docs-hdr h3 { font-family:var(--fd); font-size:1rem; font-weight:700; }
-    .edit-pill { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; background:#07071a; color:#60a5fa; border:1px solid #1a1a4a; padding:3px 12px; border-radius:20px; }
-    .cfg-body { padding:20px 24px; font-size:12.5px; color:var(--dim); line-height:1.8; }
-    .cfg-body strong { color:var(--text); }
-    .cfg-body code { background:var(--bg); color:#c084fc; padding:1px 7px; border-radius:4px; border:1px solid var(--border); font-size:12px; }
-    .cfg-table { width:100%; border-collapse:collapse; margin-top:14px; font-size:12px; }
-    .cfg-table th { text-align:left; color:var(--muted); font-weight:500; padding:6px 12px; border-bottom:1px solid var(--border); letter-spacing:0.06em; text-transform:uppercase; font-size:10px; }
-    .cfg-table td { padding:8px 12px; border-bottom:1px solid #0f0f1a; color:var(--dim); vertical-align:top; }
-    .cfg-table td:first-child { color:#c084fc; font-family:var(--fm); }
-    .cfg-table tr:last-child td { border-bottom:none; }
-    footer { text-align:center; padding:40px 0 0; font-size:11px; color:var(--muted); line-height:2.2; }
-    footer a { color:var(--dim); text-decoration:none; }
-    footer a:hover { color:var(--text); }
-    @media(max-width:640px) {
-      .agents { grid-template-columns:1fr; }
-      .topic-row { flex-direction:column; }
-      .logo { font-size:1.6rem; }
-    }
+    body{font-family:var(--fm);background:var(--bg);color:var(--text);min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:linear-gradient(rgba(249,115,22,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(96,165,250,0.02) 1px,transparent 1px);
+      background-size:48px 48px}
+    .app{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 20px 80px}
+    header{padding:36px 0 28px;text-align:center}
+    .eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+    .logo{font-family:var(--fd);font-size:2.2rem;font-weight:800;line-height:1;margin-bottom:8px}
+    .logo-sub{font-size:12px;color:var(--dim);font-family:var(--fm)}
+    .logo-sub strong{color:var(--a)}
+    .groq-badge{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:11px;
+      font-family:var(--fm);letter-spacing:0.08em;background:linear-gradient(135deg,#1a0e07,#07101a);
+      border:1px solid #2a1a0a;color:var(--a);padding:6px 16px;border-radius:20px}
+    .gdot{width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 8px var(--a);animation:pulse 2s ease infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .key-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+      padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .key-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+    .key-wrap{flex:1;display:flex;gap:8px;min-width:240px}
+    .key-in{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);
+      font-family:var(--fm);font-size:12.5px;padding:10px 14px;border-radius:8px;outline:none;transition:border-color 0.2s}
+    .key-in:focus{border-color:var(--a)}
+    .key-in::placeholder{color:var(--muted)}
+    .save-key{font-family:var(--fd);font-size:12px;font-weight:700;padding:10px 18px;border-radius:8px;
+      background:var(--a-bg);color:var(--a);border:1px solid var(--a-b);cursor:pointer;white-space:nowrap;transition:background 0.18s}
+    .save-key:hover{background:#2a1208}
+    #key-ok{font-size:11px;color:#4ade80;white-space:nowrap;display:none}
+    .key-hint{font-size:11px;color:var(--muted)}
+    .key-hint a{color:var(--dim);text-decoration:none}
+    .key-hint a:hover{color:var(--text)}
+    .agents{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .ac{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color 0.3s,box-shadow 0.3s}
+    .ac-emoji{font-size:22px;margin-bottom:8px}
+    .ac-name{font-family:var(--fd);font-size:14px;font-weight:700;margin-bottom:2px}
+    .ac-model{font-size:10px;color:var(--muted);margin-bottom:4px}
+    .ac-role{font-size:11px;color:#50506a;font-style:italic;margin-bottom:6px}
+    .ac-status{font-size:11px;color:var(--dim);min-height:15px}
+    .topic-area{margin-bottom:20px;display:flex;flex-direction:column;gap:8px}
+    .topic-row{display:flex;gap:10px;flex-wrap:wrap}
+    .topic-in{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);color:var(--text);
+      font-family:var(--fm);font-size:13px;padding:13px 18px;border-radius:10px;outline:none;transition:border-color 0.2s}
+    .topic-in::placeholder{color:var(--muted)}
+    .topic-in:focus{border-color:var(--dim)}
+    #topic-suggestions{background:var(--surface);border:1px solid var(--border);color:var(--dim);
+      font-family:var(--fm);font-size:12px;padding:9px 14px;border-radius:8px;outline:none;cursor:pointer;width:100%}
+    #topic-suggestions option{background:var(--bg)}
+    .ctrls{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{font-family:var(--fd);font-size:13px;font-weight:700;padding:12px 18px;border-radius:10px;
+      border:none;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+    .btn-go{background:linear-gradient(135deg,var(--a),var(--b));color:#fff;box-shadow:0 4px 20px rgba(249,115,22,0.25)}
+    .btn-go:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(249,115,22,0.4)}
+    .btn-go:disabled{opacity:0.35;transform:none;cursor:not-allowed}
+    .btn-cont{background:var(--surface);border:1px solid #2a2a5a;color:#a0a0f0}
+    .btn-cont:hover{color:var(--text);border-color:#6060c0;background:#12123a}
+    .btn-conclude{background:#071a07;border:1px solid #1a4a1a;color:#4ade80}
+    .btn-conclude:hover{background:#0d2a0d;border-color:#2a6a2a}
+    .btn-conclude:disabled{opacity:0.4;cursor:not-allowed}
+    .btn-sec{background:var(--surface);border:1px solid var(--border);color:var(--dim)}
+    .btn-sec:hover{color:var(--text);border-color:var(--muted)}
+    .chat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+    .chat-top{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .chat-label{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
+    .round-track{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    #rlabel{font-size:11px;color:var(--dim)}
+    #pips{display:flex;gap:5px;flex-wrap:wrap}
+    .pip{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all 0.4s}
+    .pip.go{background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 0 8px rgba(249,115,22,0.5)}
+    .pip.conclude{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,0.5)}
+    .feed{height:520px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+    .feed::-webkit-scrollbar{width:3px}
+    .feed::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);text-align:center;padding:20px}
+    .empty-icon{font-size:48px;opacity:0.5}
+    .empty p{font-size:13px;line-height:1.75;max-width:340px}
+    .empty code{color:var(--a);background:var(--bg);padding:1px 6px;border-radius:4px;border:1px solid var(--border)}
+    .msg{display:flex;gap:12px;align-items:flex-start;animation:fadeUp 0.3s ease}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .av{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid}
+    .mbody{flex:1;min-width:0}
+    .mmeta{display:flex;align-items:baseline;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+    .mname{font-family:var(--fd);font-size:13px;font-weight:700}
+    .mtime{font-size:10px;color:var(--muted)}
+    .mtext{font-size:13.5px;line-height:1.8;color:#c0c0dc;white-space:pre-wrap;word-break:break-word}
+    .old-msg .mtext{color:#7070a0}
+    .old-msg .av{opacity:0.5}
+    .conclusion-badge{font-size:10px;font-weight:600;background:#071a07;color:#4ade80;border:1px solid #1a4a1a;padding:2px 8px;border-radius:10px}
+    .typing{display:flex;gap:5px;align-items:center;padding:6px 0}
+    .typing span{width:7px;height:7px;border-radius:50%;opacity:0.3;animation:bob 1.2s ease infinite}
+    .typing span:nth-child(2){animation-delay:0.2s}
+    .typing span:nth-child(3){animation-delay:0.4s}
+    @keyframes bob{0%,60%,100%{transform:translateY(0);opacity:0.3}30%{transform:translateY(-6px);opacity:1}}
+    .howto{margin-top:40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+    .howto-hdr{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .howto-hdr h3{font-family:var(--fd);font-size:1rem;font-weight:700}
+    .free-pill{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;background:#071a07;color:#4ade80;border:1px solid #1a4a1a;padding:3px 12px;border-radius:20px}
+    .steps{padding:28px;display:flex;flex-direction:column}
+    .step{display:flex;gap:16px;padding-bottom:22px;position:relative}
+    .step:last-child{padding-bottom:0}
+    .step:not(:last-child)::before{content:'';position:absolute;left:15px;top:32px;width:1px;height:calc(100% - 10px);background:var(--border)}
+    .snum{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+      font-family:var(--fd);font-size:13px;font-weight:700;color:var(--a);background:var(--bg);border:1px solid var(--a-b);position:relative;z-index:1}
+    .sbody{flex:1;padding-top:5px}
+    .stitle{font-family:var(--fd);font-size:14px;font-weight:600;margin-bottom:5px}
+    .sdesc{font-size:12.5px;color:var(--dim);line-height:1.7}
+    .sdesc a{color:var(--a);text-decoration:none}
+    .sdesc code{background:var(--bg);color:#c084fc;padding:1px 7px;border-radius:4px;border:1px solid var(--border);font-size:11.5px}
+    .sbox{margin-top:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--muted)}
+    footer{text-align:center;padding:40px 0 0;font-size:11px;color:var(--muted);line-height:2.2}
+    footer a{color:var(--dim);text-decoration:none}
+    footer a:hover{color:var(--text)}
+    @media(max-width:640px){.agents{grid-template-columns:1fr}.topic-row{flex-direction:column}.logo{font-size:1.6rem}}
   </style>
 </head>
 <body>
 <div class="app">
+
   <header>
     <div class="eyebrow">Open Source Models · One Free API · Real Debate</div>
-    <div class="logo" id="page-title">🦙 vs 🧠 vs ⚡</div>
-    <div class="logo-sub" id="page-sub">Three AI models debate each other — powered by <strong>Groq</strong></div>
+    <div class="logo">🦙 vs 🧠 vs ⚡</div>
+    <div class="logo-sub">Three AI models debate each other — powered by <strong>Groq</strong></div>
     <div class="groq-badge"><span class="gdot"></span> One Groq Key · All Models · 100% Free</div>
   </header>
-
-  <div class="cfg-notice" id="cfg-notice">⏳ Loading config.json…</div>
 
   <div class="key-bar">
     <span class="key-label">⚡ Groq API Key</span>
@@ -163,26 +148,26 @@
     <span class="key-hint">Free key → <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
   </div>
 
-  <div class="agents" id="agent-grid">
-    <div class="ac" id="card-a" style="--col:var(--a)">
+  <div class="agents">
+    <div class="ac" id="card-a">
       <div class="ac-emoji">🦙</div>
-      <div class="ac-name">LLaMA 3.3</div>
+      <div class="ac-name" style="color:#f97316">LLaMA 3.3</div>
       <div class="ac-model">llama-3.3-70b-versatile · Meta</div>
       <div class="ac-role">"The Bold One" — challenges everything</div>
       <div class="ac-status" id="st-a">Standby</div>
     </div>
-    <div class="ac" id="card-b" style="--col:var(--b)">
+    <div class="ac" id="card-b">
       <div class="ac-emoji">🧠</div>
-      <div class="ac-name">Qwen 3</div>
+      <div class="ac-name" style="color:#60a5fa">Qwen 3</div>
       <div class="ac-model">qwen/qwen3-32b · Alibaba</div>
       <div class="ac-role">"The Analyst" — precise, structured</div>
       <div class="ac-status" id="st-b">Standby</div>
     </div>
-    <div class="ac" id="card-c" style="--col:var(--c)">
+    <div class="ac" id="card-c">
       <div class="ac-emoji">⚡</div>
-      <div class="ac-name">LLaMA 3.1</div>
+      <div class="ac-name" style="color:#4ade80">LLaMA 3.1</div>
       <div class="ac-model">llama-3.1-8b-instant · Meta</div>
-      <div class="ac-role">"The Sprinter" — fast & contrarian</div>
+      <div class="ac-role">"The Sprinter" — fast &amp; contrarian</div>
       <div class="ac-status" id="st-c">Standby</div>
     </div>
   </div>
@@ -191,15 +176,20 @@
     <div class="topic-row">
       <input id="topic" class="topic-in" type="text" placeholder="Enter any topic… e.g. 'Future of 3D Vision and Robotics'"/>
       <div class="ctrls">
-        <button class="btn btn-go" id="go-btn" onclick="startDebate(false)">▶ Start New</button>
-        <button class="btn btn-cont" id="cont-btn" onclick="startDebate(true)" style="display:none">↩ Continue</button>
-        <button class="btn btn-sec" id="pause-btn" onclick="togglePause()" style="display:none">⏸ Pause</button>
-        <button class="btn btn-conclude" id="conclude-btn" onclick="concludeNow()" style="display:none">🏁 Conclude</button>
-        <button class="btn btn-sec" id="reset-btn" onclick="resetAll()" style="display:none">↺ Clear</button>
+        <button class="btn btn-go"       id="go-btn"       onclick="startDebate(false)">▶ Start New</button>
+        <button class="btn btn-cont"     id="cont-btn"     onclick="startDebate(true)"  style="display:none">↩ Continue</button>
+        <button class="btn btn-sec"      id="pause-btn"    onclick="togglePause()"      style="display:none">⏸ Pause</button>
+        <button class="btn btn-conclude" id="conclude-btn" onclick="concludeNow()"      style="display:none">🏁 Conclude</button>
+        <button class="btn btn-sec"      id="reset-btn"    onclick="resetAll()"         style="display:none">↺ Clear</button>
       </div>
     </div>
     <select id="topic-suggestions" onchange="onTopicSelect()">
       <option value="">💡 Pick a suggested topic…</option>
+      <option value="What is the true problem statement for the 3D-LLM-VLA workshop? https://3d-llm-vla.github.io/">3D-LLM-VLA workshop problem statement</option>
+      <option value="Will AI replace researchers in the next 10 years?">Will AI replace researchers?</option>
+      <option value="Is open-source AI better than closed-source AI?">Open-source vs closed-source AI</option>
+      <option value="What is the most important unsolved problem in Computer Vision?">Biggest unsolved CV problem</option>
+      <option value="How should we evaluate multimodal AI models?">How to evaluate multimodal AI?</option>
     </select>
   </div>
 
@@ -214,7 +204,9 @@
     <div class="feed" id="feed">
       <div class="empty" id="empty">
         <div class="empty-icon">🤖</div>
-        <p>Paste your Groq key, type a topic, and press <strong>▶ Start</strong>.<br/>The debate begins immediately — no other setup needed.</p>
+        <p>Paste your Groq key, type a topic, press <strong>▶ Start New</strong>.<br/>
+        Runs forever — press <strong>🏁 Conclude</strong> anytime for final statements.<br/>
+        <strong>⏸ Pause</strong> saves progress so you can <strong>↩ Continue</strong> later.</p>
       </div>
     </div>
   </div>
@@ -225,29 +217,23 @@
       <span class="free-pill">No Credit Card · 60 Seconds</span>
     </div>
     <div class="steps">
-      <div class="step"><div class="snum">1</div><div class="sbody"><div class="stitle">Go to console.groq.com</div><div class="sdesc">Open <a href="https://console.groq.com" target="_blank">console.groq.com</a>. Sign up using <strong>GitHub login</strong> — fastest option, no card needed.</div></div></div>
-      <div class="step"><div class="snum">2</div><div class="sbody"><div class="stitle">Create an API Key</div><div class="sdesc">Click <strong>API Keys</strong> in the sidebar → <strong>Create API Key</strong>. Name it <code>roundtable</code>.</div></div></div>
-      <div class="step"><div class="snum">3</div><div class="sbody"><div class="stitle">Copy it — shown only once!</div><div class="sdesc">Copy immediately. Starts with <code>gsk_…</code></div><div class="sbox">Example: <code>gsk_aBcDeFgHiJkLmNoPqRsTuVwXyZ...</code></div></div></div>
-      <div class="step"><div class="snum">4</div><div class="sbody"><div class="stitle">Paste above → Save Key → Start! 🎉</div><div class="sdesc">One key powers all models. Free tier: <code>30 req/min</code> per model.</div></div></div>
-    </div>
-  </div>
-
-  <div class="cfg-docs">
-    <div class="cfg-docs-hdr">
-      <h3>⚙ Customise via config.json</h3>
-      <span class="edit-pill">Never touch index.html</span>
-    </div>
-    <div class="cfg-body">
-      <strong>Upload <code>config.json</code> to your GitHub repo</strong> alongside <code>index.html</code> — this page fetches it automatically on load. If it's missing, the hardcoded defaults above are used and everything still works.
-      <table class="cfg-table">
-        <tr><th>Key</th><th>What it controls</th></tr>
-        <tr><td>debate_rounds</td><td>Number of debate rounds before conclusion (default: 9)</td></tr>
-        <tr><td>conclusion_round</td><td>true/false — force a final problem statement round</td></tr>
-        <tr><td>inter_turn_delay_ms</td><td>Delay between turns — increase if hitting rate limits</td></tr>
-        <tr><td>agents[].model</td><td>Any model ID from <a href="https://console.groq.com/docs/models" target="_blank">console.groq.com/docs/models</a></td></tr>
-        <tr><td>agents[].personality</td><td>The character prompt for that model</td></tr>
-        <tr><td>suggested_topics[]</td><td>Topics shown in the dropdown below the input</td></tr>
-      </table>
+      <div class="step"><div class="snum">1</div><div class="sbody">
+        <div class="stitle">Go to console.groq.com</div>
+        <div class="sdesc">Open <a href="https://console.groq.com" target="_blank">console.groq.com</a>. Sign up with <strong>GitHub login</strong> — no card needed.</div>
+      </div></div>
+      <div class="step"><div class="snum">2</div><div class="sbody">
+        <div class="stitle">Create an API Key</div>
+        <div class="sdesc">Click <strong>API Keys</strong> in the sidebar → <strong>Create API Key</strong>. Name it <code>roundtable</code>.</div>
+      </div></div>
+      <div class="step"><div class="snum">3</div><div class="sbody">
+        <div class="stitle">Copy it — shown only once!</div>
+        <div class="sdesc">Starts with <code>gsk_…</code></div>
+        <div class="sbox">Example: <code>gsk_aBcDeFgHiJkLmNoPqRsTuVwXyZ...</code></div>
+      </div></div>
+      <div class="step"><div class="snum">4</div><div class="sbody">
+        <div class="stitle">Paste above → Save Key → Start! 🎉</div>
+        <div class="sdesc">One key powers all three models. Free tier: <code>30 req/min</code> each.</div>
+      </div></div>
     </div>
   </div>
 
@@ -259,346 +245,273 @@
 </div>
 
 <script>
-// ── DEFAULT CONFIG (used if config.json is missing) ───────────────────────
-const DEFAULTS = {
-  title: null, subtitle: null,
-  debate_rounds: 9,
-  conclusion_round: true,
-  inter_turn_delay_ms: 1500,
-  suggested_topics: [
-    "What is the true problem statement for the 3D-LLM-VLA workshop? https://3d-llm-vla.github.io/",
-    "Will AI replace researchers in the next 10 years?",
-    "Is open-source AI better than closed-source AI?",
-    "What is the most important unsolved problem in Computer Vision?"
-  ],
-  agents: [
-    { id:'a', emoji:'🦙', name:'LLaMA 3.3', model:'llama-3.3-70b-versatile', provider:'Meta', color:'#f97316',
-      role:'"The Bold One" — challenges everything',
-      personality:'Bold, direct, provocative. Challenge assumptions confidently.',
-      style:'MAXIMUM 3 sentences. Be punchy. Directly respond to the last message. NEVER start with filler like "Great point" or "As an AI".' },
-    { id:'b', emoji:'🧠', name:'Qwen 3', model:'qwen/qwen3-32b', provider:'Alibaba', color:'#60a5fa',
-      role:'"The Analyst" — precise, structured',
-      personality:'Analytical, precise, structured. Find logical gaps. Bring evidence.',
-      style:'MAXIMUM 3 sentences. Be precise. Directly engage with what was said. NEVER use filler openers.' },
-    { id:'c', emoji:'⚡', name:'LLaMA 3.1', model:'llama-3.1-8b-instant', provider:'Meta (Fast)', color:'#4ade80',
-      role:'"The Sprinter" — fast & contrarian',
-      personality:'Quick, sharp, contrarian. Cut through complexity with simple devastating observations.',
-      style:'MAXIMUM 3 sentences. Be ultra-concise. Find the simplest angle. NEVER use filler openers.' }
-  ]
-};
+// ── AGENTS — edit model/system here to change behaviour ───────────────────
+var AGENTS = [
+  { id:'a', emoji:'🦙', name:'LLaMA 3.3', color:'#f97316',
+    model:'llama-3.3-70b-versatile',
+    system:'You are LLaMA 3.3 70B by Meta AI in a 3-way live debate with Qwen 3 (Alibaba) and LLaMA 3.1 (Meta), running on Groq. Be bold, direct, provocative. Challenge assumptions. MAXIMUM 3 sentences. NEVER open with filler like "Great point" or "As an AI". Jump straight into your argument.' },
+  { id:'b', emoji:'🧠', name:'Qwen 3', color:'#60a5fa',
+    model:'qwen/qwen3-32b',
+    system:'You are Qwen 3 32B by Alibaba Cloud in a 3-way live debate with LLaMA 3.3 (Meta) and LLaMA 3.1 (Meta), running on Groq. Be analytical, precise, structured. Find logical gaps. MAXIMUM 3 sentences. NEVER use filler openers. Start with substance immediately.' },
+  { id:'c', emoji:'⚡', name:'LLaMA 3.1', color:'#4ade80',
+    model:'llama-3.1-8b-instant',
+    system:'You are LLaMA 3.1 8B by Meta AI in a 3-way live debate with LLaMA 3.3 (Meta) and Qwen 3 (Alibaba), running on Groq. Be quick, sharp, contrarian. Find the simplest angle that cuts through noise. MAXIMUM 3 sentences. NEVER use filler openers.' }
+];
+var DELAY = 1500; // ms between turns
 
 // ── STATE ─────────────────────────────────────────────────────────────────
-let CFG     = DEFAULTS;   // always has a value — never null
-let convo   = [];
-let round   = 0;
-let paused  = false;
-let running = false;
-let stopped = false;
+var convo   = [];
+var round   = 0;
+var paused  = false;
+var running = false;
+var stopped = false;
 
-// ── PERSIST CONVERSATION ──────────────────────────────────────────────────
-function saveSession() {
-  try {
+// ── INIT (runs immediately, no waiting for anything) ──────────────────────
+function getKey(){ return localStorage.getItem('groq_rt_key') || ''; }
+
+function saveKey(){
+  var v = document.getElementById('groq-key').value.trim();
+  if(!v){ alert('Please paste your Groq key!'); return; }
+  localStorage.setItem('groq_rt_key', v);
+  document.getElementById('key-ok').style.display = '';
+  sysmsg('✓ Groq key saved! ⚡');
+}
+
+// ── SESSION ───────────────────────────────────────────────────────────────
+function saveSession(){
+  try{
     localStorage.setItem('rt_session', JSON.stringify({
       topic: document.getElementById('topic').value,
-      convo,
-      round,
-      savedAt: Date.now()
+      convo: convo, round: round, savedAt: Date.now()
     }));
-  } catch(e) {}
+  }catch(e){}
 }
-
-function loadSession() {
-  try {
-    const raw = localStorage.getItem('rt_session');
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch(e) { return null; }
+function loadSession(){
+  try{ var r=localStorage.getItem('rt_session'); return r?JSON.parse(r):null; }catch(e){ return null; }
 }
+function clearSession(){ localStorage.removeItem('rt_session'); }
 
-function clearSession() {
-  localStorage.removeItem('rt_session');
-}
-
-function showContinueIfAvailable() {
-  const s = loadSession();
-  const btn = document.getElementById('cont-btn');
-  if (s && s.convo && s.convo.length > 0) {
-    const mins = Math.round((Date.now() - s.savedAt) / 60000);
-    const age = mins < 1 ? 'just now' : mins < 60 ? mins+'m ago' : Math.round(mins/60)+'h ago';
-    btn.textContent = '↩ Continue (' + s.convo.length + ' msgs, ' + age + ')';
+function refreshContBtn(){
+  var s = loadSession();
+  var btn = document.getElementById('cont-btn');
+  if(s && s.convo && s.convo.length > 0){
+    var mins = Math.round((Date.now()-s.savedAt)/60000);
+    var age = mins<1?'just now':mins<60?mins+'m ago':Math.round(mins/60)+'h ago';
+    btn.textContent = '\u21a9 Continue ('+s.convo.length+' msgs, '+age+')';
     btn.style.display = '';
   } else {
     btn.style.display = 'none';
   }
 }
 
-// ── BOOT — config.json is optional enhancement, not requirement ───────────
-window.addEventListener('load', () => {
-  initKey();
-  buildPips();
-  loadSuggestions();
-  showContinueIfAvailable();
-  tryLoadConfig();   // fires async, page is fully interactive without it
-  document.getElementById('topic').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !running) startDebate(false);
-  });
-});
-
-async function tryLoadConfig() {
-  const notice = document.getElementById('cfg-notice');
-  try {
-    const res = await fetch('./config.json?v=' + Date.now());
-    if (!res.ok) throw new Error('config.json not found (' + res.status + ') — using defaults');
-    const json = await res.json();
-    // Merge with defaults so partial configs work too
-    CFG = Object.assign({}, DEFAULTS, json);
-    if (json.agents) CFG.agents = json.agents;
-    notice.textContent = '✓ config.json loaded — models and settings updated';
-    notice.className = 'cfg-notice loaded';
-    applyConfigToUI();
-  } catch(e) {
-    notice.textContent = 'ℹ ' + e.message;
-    notice.className = 'cfg-notice failed';
-    // Page still works perfectly with DEFAULTS
-  }
-  setTimeout(() => notice.style.display = 'none', 4000);
-}
-
-function applyConfigToUI() {
-  if (CFG.title)    document.getElementById('page-title').textContent = CFG.title;
-  if (CFG.subtitle) document.getElementById('page-sub').innerHTML    = CFG.subtitle;
-
-  // Rebuild agent cards from config
-  const grid = document.getElementById('agent-grid');
-  grid.innerHTML = '';
-  CFG.agents.forEach(ag => {
-    grid.innerHTML += `
-      <div class="ac" id="card-${ag.id}" style="--col:${ag.color}">
-        <div class="ac-emoji">${ag.emoji}</div>
-        <div class="ac-name">${ag.name}</div>
-        <div class="ac-model">${ag.model} · ${ag.provider}</div>
-        <div class="ac-role">${ag.role}</div>
-        <div class="ac-status" id="st-${ag.id}">Standby</div>
-      </div>`;
-  });
-
-  buildPips();
-  loadSuggestions();
-}
-
-function buildPips() {
-  const total = CFG.debate_rounds + (CFG.conclusion_round ? 1 : 0);
-  const el = document.getElementById('pips');
+// ── ROUND PIPS ────────────────────────────────────────────────────────────
+function updateRound(n){
+  document.getElementById('rlabel').textContent = 'Round '+n;
+  // Show up to 20 pips, cycling colours
+  var el = document.getElementById('pips');
   el.innerHTML = '';
-  for (let i = 1; i <= total; i++) {
-    const p = document.createElement('div');
-    p.className = 'pip'; p.id = 'p' + i;
-    if (i === total && CFG.conclusion_round) { p.style.opacity='0.4'; p.style.background='#4ade80'; }
+  var show = Math.min(n, 20);
+  for(var i=1; i<=show; i++){
+    var p = document.createElement('div');
+    p.className = 'pip go';
     el.appendChild(p);
   }
-  updateRound(0);
+  if(n > 20){
+    var more = document.createElement('span');
+    more.style.cssText = 'font-size:10px;color:var(--dim);align-self:center';
+    more.textContent = '+' + (n-20);
+    el.appendChild(more);
+  }
 }
 
-function loadSuggestions() {
-  const sel = document.getElementById('topic-suggestions');
-  // Remove old dynamic options, keep first placeholder
-  while (sel.options.length > 1) sel.remove(1);
-  (CFG.suggested_topics || []).forEach(t => {
-    const o = document.createElement('option');
-    o.value = t; o.textContent = t.length > 70 ? t.slice(0,70)+'…' : t;
-    sel.appendChild(o);
-  });
-}
-
-function onTopicSelect() {
-  const v = document.getElementById('topic-suggestions').value;
-  if (v) document.getElementById('topic').value = v;
-}
-
-// ── KEY ───────────────────────────────────────────────────────────────────
-const getKey = () => localStorage.getItem('groq_rt_key') || '';
-function saveKey() {
-  const v = document.getElementById('groq-key').value.trim();
-  if (!v) { alert('Please paste your Groq key!'); return; }
-  localStorage.setItem('groq_rt_key', v);
-  document.getElementById('key-ok').style.display = '';
-  sysmsg('✓ Groq key saved — ready to debate! ⚡');
-}
-function initKey() {
-  const k = getKey();
-  if (k) { document.getElementById('groq-key').value = k; document.getElementById('key-ok').style.display = ''; }
+// ── TOPIC DROPDOWN ────────────────────────────────────────────────────────
+function onTopicSelect(){
+  var v = document.getElementById('topic-suggestions').value;
+  if(v) document.getElementById('topic').value = v;
 }
 
 // ── PROMPTS ───────────────────────────────────────────────────────────────
-function buildSystem(ag) {
-  const others = CFG.agents.filter(a => a.id !== ag.id).map(a => `${a.name} (${a.provider})`).join(' and ');
-  return `You are ${ag.name} by ${ag.provider}. You're in a live debate with ${others}, all running on Groq.\nPersonality: ${ag.personality}\nRules: ${ag.style}`;
-}
-function buildPrompt(topic) {
-  if (!convo.length) return `Topic: "${topic}"\n\nYou go first. Open with your sharpest take.`;
-  const log = convo.slice(-8).map(m => {
-    const a = CFG.agents.find(x => x.id === m.id);
-    return `${a.name}: ${m.text}`;
+function buildPrompt(topic){
+  if(!convo.length) return 'Topic: "'+topic+'"\n\nYou go first. Open with your sharpest take.';
+  var log = convo.slice(-8).map(function(m){
+    var a = AGENTS.filter(function(x){return x.id===m.id;})[0];
+    return a.name+': '+m.text;
   }).join('\n\n');
-  return `Topic: "${topic}"\n\nConversation:\n${log}\n\nYour turn. Respond directly.`;
+  return 'Topic: "'+topic+'"\n\nConversation:\n'+log+'\n\nYour turn. Respond directly and move the debate forward.';
 }
-function buildConclusion(topic) {
-  const log = convo.slice(-9).map(m => {
-    const a = CFG.agents.find(x => x.id === m.id);
-    return `${a.name}: ${m.text}`;
+function buildConclusion(topic){
+  var log = convo.slice(-9).map(function(m){
+    var a = AGENTS.filter(function(x){return x.id===m.id;})[0];
+    return a.name+': '+m.text;
   }).join('\n\n');
-  return `Topic: "${topic}"\n\nDebate so far:\n${log}\n\nFINAL ROUND: State ONE clear problem statement (2 sentences max) based on the full discussion. Start with "My final problem statement:"`;
+  return 'Topic: "'+topic+'"\n\nDebate so far:\n'+log+'\n\nFINAL ROUND: State ONE clear problem statement (2 sentences max). Begin with "My final problem statement:"';
 }
 
-// ── SMART SCROLL ─────────────────────────────────────────────────────────
-function smartScroll() {
-  const f = feedEl();
-  if (!f) return;
-  // Only auto-scroll if user is within 120px of the bottom
-  const distFromBottom = f.scrollHeight - f.scrollTop - f.clientHeight;
-  if (distFromBottom < 120) {
-    f.scrollTop = f.scrollHeight;
+// ── STRIP QWEN THINK TAGS ─────────────────────────────────────────────────
+function stripThink(text){
+  var out='', pos=0;
+  while(pos < text.length){
+    var s = text.indexOf('<think>', pos);
+    if(s === -1){ out += text.slice(pos); break; }
+    out += text.slice(pos, s);
+    var e = text.indexOf('</think>', s);
+    if(e === -1) break;
+    pos = e + 8;
   }
+  return out.trim();
 }
 
-// ── GROQ ──────────────────────────────────────────────────────────────────
-async function callGroq(ag, prompt, isConclusion) {
-  const key = getKey();
-  if (!key) throw new Error('No Groq key — paste it above and click Save Key');
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + key },
+// ── GROQ API ──────────────────────────────────────────────────────────────
+function callGroq(ag, prompt, isConclusion){
+  var key = getKey();
+  if(!key) return Promise.reject(new Error('No Groq key — paste it above and click Save Key'));
+  return fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
     body: JSON.stringify({
       model: ag.model,
       max_tokens: isConclusion ? 300 : 500,
       temperature: isConclusion ? 0.6 : 0.88,
-      messages: [
-        { role:'system', content: buildSystem(ag) },
-        { role:'user',   content: prompt }
+      messages:[
+        {role:'system', content: ag.system},
+        {role:'user',   content: prompt}
       ]
     })
+  }).then(function(res){
+    if(!res.ok) return res.text().then(function(t){
+      var msg = 'Groq '+res.status;
+      try{ msg = JSON.parse(t).error.message || msg; }catch(e){}
+      throw new Error(msg);
+    });
+    return res.json();
+  }).then(function(d){
+    var text = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) ? d.choices[0].message.content.trim() : null;
+    if(text) text = stripThink(text);
+    return text || null;
   });
-  if (!res.ok) {
-    const e = await res.text();
-    let msg = 'Groq ' + res.status;
-    try { msg = JSON.parse(e).error?.message || msg; } catch(_) {}
-    throw new Error(msg);
-  }
-  const d = await res.json();
-  let text = d.choices?.[0]?.message?.content?.trim() || null;
-  if (text) {
-    // Strip Qwen chain-of-thought <think>...</think> blocks
-    // Strip <think>...</think> blocks (Qwen chain-of-thought)
-    var _out='', _pos=0;
-    while(_pos<text.length){var _s=text.indexOf('<think>',_pos);if(_s===-1){_out+=text.slice(_pos);break;}_out+=text.slice(_pos,_s);var _e=text.indexOf('</think>',_s);if(_e===-1)break;_pos=_e+8;}
-    text=_out.trim();
-    // Also strip any leading/trailing blank lines left behind
-    text = text.trim();
-    // If nothing left after stripping, return null
-    if (!text) return null;
-  }
-  return text;
+}
+
+// ── SMART SCROLL ─────────────────────────────────────────────────────────
+function smartScroll(){
+  var f = document.getElementById('feed');
+  if(!f) return;
+  var dist = f.scrollHeight - f.scrollTop - f.clientHeight;
+  if(dist < 120) f.scrollTop = f.scrollHeight;
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
-const nowStr = () => new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-const esc    = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const feedEl = () => document.getElementById('feed');
-function hideEmpty() { document.getElementById('empty')?.remove(); }
+function nowStr(){ return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function feedEl(){ return document.getElementById('feed'); }
+function hideEmpty(){ var e=document.getElementById('empty'); if(e) e.remove(); }
 
-function sysmsg(html) {
+function sysmsg(html){
   hideEmpty();
-  const el = document.createElement('div');
+  var el = document.createElement('div');
   el.className = 'msg';
-  el.innerHTML = `<div class="av" style="background:#111;border-color:var(--border);font-size:14px">·</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:var(--muted)">System</span><span class="mtime">${nowStr()}</span></div><p class="mtext" style="color:var(--muted);font-style:italic;font-size:12px">${html}</p></div>`;
+  el.innerHTML = '<div class="av" style="background:#111;border-color:var(--border);font-size:14px">·</div>'
+    +'<div class="mbody"><div class="mmeta"><span class="mname" style="color:var(--muted)">System</span>'
+    +'<span class="mtime">'+nowStr()+'</span></div>'
+    +'<p class="mtext" style="color:var(--muted);font-style:italic;font-size:12px">'+html+'</p></div>';
   feedEl().appendChild(el); smartScroll();
 }
-function showTyping(ag) {
+
+function showTyping(ag){
   hideEmpty();
-  const el = document.createElement('div');
-  el.className = 'msg'; el.id = 'typing-' + ag.id;
-  el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime">${nowStr()}</span></div><div class="typing"><span style="background:${ag.color}"></span><span style="background:${ag.color}"></span><span style="background:${ag.color}"></span></div></div>`;
+  var el = document.createElement('div');
+  el.className = 'msg'; el.id = 'typing-'+ag.id;
+  el.innerHTML = '<div class="av" style="background:'+ag.color+'18;border-color:'+ag.color+'44">'+ag.emoji+'</div>'
+    +'<div class="mbody"><div class="mmeta"><span class="mname" style="color:'+ag.color+'">'+ag.name+'</span>'
+    +'<span class="mtime">'+nowStr()+'</span></div>'
+    +'<div class="typing"><span style="background:'+ag.color+'"></span><span style="background:'+ag.color+'"></span><span style="background:'+ag.color+'"></span></div></div>';
   feedEl().appendChild(el); smartScroll();
-  setSt(ag.id,'Thinking…',ag.color); setCard(ag.id,true,ag.color);
+  setSt(ag.id,'Thinking\u2026',ag.color); setCard(ag.id,true,ag.color);
 }
-function rmTyping(id) { document.getElementById('typing-'+id)?.remove(); }
-function addMsg(ag, text, isConclusion) {
+function rmTyping(id){ var e=document.getElementById('typing-'+id); if(e) e.remove(); }
+
+function addMsg(ag, text, isConclusion, isOld){
   rmTyping(ag.id);
-  const badge = isConclusion ? '<span class="conclusion-badge">✦ Final Statement</span>' : '';
-  const el = document.createElement('div');
-  el.className = 'msg';
-  el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime">${nowStr()}</span>${badge}</div><p class="mtext">${esc(text)}</p></div>`;
+  var badge = isConclusion ? '<span class="conclusion-badge">&#10022; Final Statement</span>' : '';
+  var el = document.createElement('div');
+  el.className = 'msg' + (isOld ? ' old-msg' : '');
+  el.innerHTML = '<div class="av" style="background:'+ag.color+'18;border-color:'+ag.color+'44">'+ag.emoji+'</div>'
+    +'<div class="mbody"><div class="mmeta"><span class="mname" style="color:'+ag.color+'">'+ag.name+'</span>'
+    +'<span class="mtime">'+(isOld?'restored':nowStr())+'</span>'+badge+'</div>'
+    +'<p class="mtext">'+esc(text)+'</p></div>';
   feedEl().appendChild(el); smartScroll();
-  setSt(ag.id,'Done ✓',ag.color); setCard(ag.id,false,ag.color);
-  if (!isConclusion) convo.push({id:ag.id, text});
+  setSt(ag.id,'Done \u2713',ag.color); setCard(ag.id,false,ag.color);
+  if(!isConclusion && !isOld) convo.push({id:ag.id, text:text});
 }
-function setSt(id, msg, color) {
-  const el = document.getElementById('st-'+id);
-  if (!el) return; el.textContent = msg;
-  el.style.color = msg.includes('Thinking') ? color : '';
+
+function setSt(id, msg, color){
+  var el = document.getElementById('st-'+id);
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color = (msg.indexOf('Thinking')>=0) ? color : '';
 }
-function setCard(id, on, color) {
-  const el = document.getElementById('card-'+id);
-  if (!el) return;
+function setCard(id, on, color){
+  var el = document.getElementById('card-'+id);
+  if(!el) return;
   el.style.borderColor = on ? color : '';
   el.style.boxShadow   = on ? '0 0 28px -4px '+color : '';
 }
-function updateRound(n) {
-  const total = CFG.debate_rounds + (CFG.conclusion_round ? 1 : 0);
-  document.getElementById('rlabel').textContent = 'Round ' + n + ' / ' + total;
-  for (let i = 1; i <= total; i++) {
-    const p = document.getElementById('p'+i);
-    if (!p) continue;
-    if (i === total && CFG.conclusion_round) {
-      p.className = 'pip' + (n >= total ? ' conclude' : '');
-    } else {
-      p.className = 'pip' + (i <= n ? ' go' : '');
-    }
-  }
+
+// ── DEBATE LOOP ───────────────────────────────────────────────────────────
+function wait(ms){ return new Promise(function(r){setTimeout(r,ms);}); }
+function waitUnpause(){ 
+  if(!paused || stopped) return Promise.resolve();
+  return wait(300).then(function(){ return waitUnpause(); });
 }
 
-// ── LOOP ──────────────────────────────────────────────────────────────────
-const wait = ms => new Promise(r => setTimeout(r, ms));
-async function waitUnpause() { while (paused && !stopped) await wait(300); }
+async function runConclusionRound(topic){
+  document.getElementById('conclude-btn').disabled = true;
+  sysmsg('🏁 <strong>Conclusion Round</strong> — each model states their final problem statement!');
+  for(var i=0; i<AGENTS.length; i++){
+    var ag = AGENTS[i];
+    showTyping(ag);
+    await wait(700 + Math.random()*400);
+    try{
+      var text = await callGroq(ag, buildConclusion(topic), true);
+      if(text) addMsg(ag, text, true, false);
+      else { rmTyping(ag.id); setCard(ag.id,false,ag.color); }
+    }catch(e){
+      rmTyping(ag.id); setCard(ag.id,false,ag.color);
+      sysmsg('&#9888; <strong>'+ag.name+'</strong>: '+esc(e.message));
+    }
+    await wait(DELAY);
+  }
+  sysmsg('&#9989; Done! See <strong>Final Statements</strong> above. You can Continue or Start New.');
+  clearSession();
+  document.getElementById('conclude-btn').disabled = false;
+}
 
-async function startDebate(isContinue) {
-  const topic = document.getElementById('topic').value.trim();
-  if (!topic)   { alert('Please enter a topic!'); return; }
-  if (!getKey()) { alert('Please paste your Groq API key and click Save Key!'); return; }
+async function startDebate(isContinue){
+  var topic = document.getElementById('topic').value.trim();
+  if(!topic){ alert('Please enter a topic!'); return; }
+  if(!getKey()){ alert('Please paste your Groq key and click Save Key first!'); return; }
 
   running=true; stopped=false; paused=false;
 
-  if (isContinue) {
-    // Restore previous session
-    const s = loadSession();
-    if (s && s.convo && s.convo.length > 0) {
-      convo = s.convo;
-      round = s.round || 0;
-      // Restore topic
-      if (s.topic) document.getElementById('topic').value = s.topic;
-      // Re-render previous messages
-      document.getElementById('feed').innerHTML = '';
-      document.getElementById('empty')?.remove();
-      convo.forEach(m => {
-        const ag = CFG.agents.find(a => a.id === m.id);
-        if (!ag) return;
-        const el = document.createElement('div');
-        el.className = 'msg';
-        el.style.opacity = '0.6'; // dim old messages
-        el.innerHTML = `<div class="av" style="background:${ag.color}18;border-color:${ag.color}44">${ag.emoji}</div><div class="mbody"><div class="mmeta"><span class="mname" style="color:${ag.color}">${ag.name}</span><span class="mtime" style="color:var(--muted)">↩ restored</span></div><p class="mtext">${esc(m.text)}</p></div>`;
-        feedEl().appendChild(el);
+  if(isContinue){
+    var s = loadSession();
+    if(s && s.convo && s.convo.length > 0){
+      convo = s.convo; round = s.round || 0;
+      if(s.topic) document.getElementById('topic').value = s.topic;
+      topic = document.getElementById('topic').value.trim();
+      // Re-render old messages dimmed
+      feedEl().innerHTML = '';
+      convo.forEach(function(m){
+        var ag = AGENTS.filter(function(x){return x.id===m.id;})[0];
+        if(ag) addMsg(ag, m.text, false, true);
       });
-      smartScroll();
-      sysmsg('↩ Continuing from round '+round+' — '+convo.length+' previous messages restored (dimmed above)');
+      sysmsg('&#8617; Continuing from round '+round+' &mdash; '+convo.length+' previous messages restored above (dimmed)');
     } else {
-      convo = []; round = 0;
-      sysmsg('⚠ No previous session found — starting fresh.');
+      convo=[]; round=0;
+      sysmsg('&#9888; No saved session found &mdash; starting fresh.');
     }
   } else {
-    // Fresh start
-    convo = []; round = 0;
-    document.getElementById('feed').innerHTML = '';
-    clearSession();
+    convo=[]; round=0;
+    feedEl().innerHTML=''; clearSession();
   }
 
   document.getElementById('go-btn').style.display = 'none';
@@ -606,59 +519,39 @@ async function startDebate(isContinue) {
   document.getElementById('pause-btn').style.display = '';
   document.getElementById('conclude-btn').style.display = '';
   document.getElementById('reset-btn').style.display = '';
-  document.getElementById('topic').disabled = true;
   updateRound(round);
 
-  if (!isContinue) {
-    sysmsg('🎙 Topic: <strong>'+esc(document.getElementById('topic').value.trim())+'</strong> — '+CFG.agents.length+' models · unlimited rounds'+(CFG.conclusion_round?' (conclude anytime with Reset→Conclude)':''));
-    await wait(500);
-  } else {
-    await wait(300);
-  }
+  if(!isContinue){
+    sysmsg('🎙 Topic: <strong>'+esc(topic)+'</strong> &mdash; running until you Pause or Conclude');
+    await wait(400);
+  } else { await wait(200); }
 
-  // Run indefinitely until stopped — conclusion only triggered manually or via conclude btn
-  while (!stopped) {
+  // Run indefinitely
+  while(!stopped){
     round++; updateRound(round); saveSession();
-    round++; updateRound(round);
-    for (const ag of CFG.agents) {
-      if (stopped) break;
-      await waitUnpause(); if (stopped) break;
+    for(var i=0; i<AGENTS.length; i++){
+      if(stopped) break;
+      await waitUnpause(); if(stopped) break;
+      var ag = AGENTS[i];
       showTyping(ag);
       await wait(600 + Math.random()*400);
-      await waitUnpause(); if (stopped) { rmTyping(ag.id); setCard(ag.id,false,ag.color); break; }
-      try {
-        const text = await callGroq(ag, buildPrompt(topic), false);
-        if (text) addMsg(ag, text, false);
+      await waitUnpause(); if(stopped){ rmTyping(ag.id); setCard(ag.id,false,ag.color); break; }
+      try{
+        var text = await callGroq(ag, buildPrompt(topic), false);
+        if(text) addMsg(ag, text, false, false);
         else { rmTyping(ag.id); setCard(ag.id,false,ag.color); setSt(ag.id,'No response',''); }
-      } catch(e) {
-        rmTyping(ag.id); setCard(ag.id,false,ag.color); setSt(ag.id,'Error ✗','#f87171');
-        sysmsg('⚠ <strong>'+ag.name+'</strong>: '+esc(e.message));
+      }catch(e){
+        rmTyping(ag.id); setCard(ag.id,false,ag.color); setSt(ag.id,'Error \u2717','#f87171');
+        sysmsg('&#9888; <strong>'+ag.name+'</strong>: '+esc(e.message));
       }
-      await wait(CFG.inter_turn_delay_ms + Math.random()*500);
+      await wait(DELAY + Math.random()*500);
     }
   }
 
-  // Conclude button was pressed (stopped=true, concluding=true)
-  if (window._concluding) {
-    window._concluding = false;
-    sysmsg('🏁 <strong>Conclusion Round</strong> — each model states their final problem statement!');
-    await wait(600);
-    const topicVal = document.getElementById('topic').value.trim();
-    for (const ag of CFG.agents) {
-      showTyping(ag);
-      await wait(700 + Math.random()*400);
-      try {
-        const text = await callGroq(ag, buildConclusion(topicVal), true);
-        if (text) addMsg(ag, text, true);
-        else { rmTyping(ag.id); setCard(ag.id,false,ag.color); }
-      } catch(e) {
-        rmTyping(ag.id); setCard(ag.id,false,ag.color);
-        sysmsg('⚠ <strong>'+ag.name+'</strong>: '+esc(e.message));
-      }
-      await wait(CFG.inter_turn_delay_ms);
-    }
-    sysmsg('✅ Concluded! <strong>Final statements above.</strong> You can still Continue or Start New.');
-    clearSession();
+  // Check if conclude was requested
+  if(window._doConclusion){
+    window._doConclusion = false;
+    await runConclusionRound(topic);
   }
 
   running = false;
@@ -666,68 +559,61 @@ async function startDebate(isContinue) {
   document.getElementById('go-btn').disabled = false;
   document.getElementById('pause-btn').style.display = 'none';
   document.getElementById('conclude-btn').style.display = 'none';
-  showContinueIfAvailable();
-  CFG.agents.forEach(ag => { setCard(ag.id,false,ag.color); setSt(ag.id,'Done',''); });
+  AGENTS.forEach(function(ag){ setCard(ag.id,false,ag.color); setSt(ag.id,'Done',''); });
+  refreshContBtn();
 }
 
-async function concludeNow() {
-  if (!running) {
-    // Not running — just do conclusion immediately
-    const topic = document.getElementById('topic').value.trim();
-    if (!convo.length) { alert('Nothing to conclude yet — start a debate first!'); return; }
-    document.getElementById('conclude-btn').disabled = true;
-    sysmsg('🏁 <strong>Conclusion Round</strong> — each model states their final problem statement!');
-    for (const ag of CFG.agents) {
-      showTyping(ag);
-      await wait(700);
-      try {
-        const text = await callGroq(ag, buildConclusion(topic), true);
-        if (text) addMsg(ag, text, true);
-        else { rmTyping(ag.id); setCard(ag.id,false,ag.color); }
-      } catch(e) {
-        rmTyping(ag.id); setCard(ag.id,false,ag.color);
-        sysmsg('⚠ <strong>'+ag.name+'</strong>: '+esc(e.message));
-      }
-      await wait(CFG.inter_turn_delay_ms);
-    }
-    sysmsg('✅ Done! You can Continue or Start New.');
-    clearSession();
-    document.getElementById('conclude-btn').disabled = false;
-  } else {
-    // Running — stop after current turn then conclude
-    window._concluding = true;
-    stopped = true;
-    sysmsg('⏳ Finishing current turn then concluding…');
-  }
-}
-
-function togglePause() {
+function togglePause(){
   paused = !paused;
-  document.getElementById('pause-btn').textContent = paused ? '▶ Resume' : '⏸ Pause';
-  if (paused) {
+  document.getElementById('pause-btn').textContent = paused ? '\u25b6 Resume' : '\u23f8 Pause';
+  if(paused){
     saveSession();
-    sysmsg('⏸ Paused & saved. You can safely close the tab and Continue later.');
+    sysmsg('\u23f8 Paused &amp; saved. Close the tab safely &mdash; click &#8617; Continue anytime.');
   } else {
-    sysmsg('▶ Resumed.');
+    sysmsg('\u25b6 Resumed.');
   }
 }
 
-function resetAll() {
-  stopped=true; paused=false; running=false;
-  convo=[]; round=0; updateRound(0);
-  clearSession();
-  document.getElementById('go-btn').style.display = '';
-  document.getElementById('go-btn').disabled = false;
-  document.getElementById('cont-btn').style.display = 'none';
-  document.getElementById('pause-btn').style.display = 'none';
-  document.getElementById('conclude-btn').style.display = 'none';
-  document.getElementById('reset-btn').style.display = 'none';
-  document.getElementById('topic').disabled = false;
-  document.getElementById('pause-btn').textContent = '⏸ Pause';
-  document.getElementById('topic-suggestions').value = '';
-  document.getElementById('feed').innerHTML = '<div class="empty" id="empty"><div class="empty-icon">🤖</div><p>Session cleared. Enter a new topic and press <strong>▶ Start New</strong>.</p></div>';
-  CFG.agents.forEach(ag => { setCard(ag.id,false,ag.color); setSt(ag.id,'Standby',''); });
+async function concludeNow(){
+  var topic = document.getElementById('topic').value.trim();
+  if(!convo.length){ alert('Nothing to conclude yet — start a debate first!'); return; }
+  if(running){
+    // Stop loop then conclude
+    window._doConclusion = true;
+    stopped = true;
+    paused = false;
+    sysmsg('&#8987; Finishing current turn then concluding\u2026');
+  } else {
+    // Not running — conclude right now
+    await runConclusionRound(topic);
+    refreshContBtn();
+  }
 }
+
+function resetAll(){
+  stopped=true; paused=false; running=false;
+  window._doConclusion = false;
+  convo=[]; round=0; updateRound(0); clearSession();
+  document.getElementById('go-btn').style.display=''; document.getElementById('go-btn').disabled=false;
+  document.getElementById('cont-btn').style.display='none';
+  document.getElementById('pause-btn').style.display='none'; document.getElementById('pause-btn').textContent='\u23f8 Pause';
+  document.getElementById('conclude-btn').style.display='none';
+  document.getElementById('reset-btn').style.display='none';
+  document.getElementById('topic-suggestions').value='';
+  feedEl().innerHTML='<div class="empty" id="empty"><div class="empty-icon">🤖</div><p>Session cleared. Enter a new topic and press <strong>&#9654; Start New</strong>.</p></div>';
+  AGENTS.forEach(function(ag){ setCard(ag.id,false,ag.color); setSt(ag.id,'Standby',''); });
+}
+
+// ── BOOT — runs immediately, no async blocking ────────────────────────────
+(function init(){
+  var k = getKey();
+  if(k){ document.getElementById('groq-key').value=k; document.getElementById('key-ok').style.display=''; }
+  refreshContBtn();
+  updateRound(0);
+  document.getElementById('topic').addEventListener('keydown', function(e){
+    if(e.key==='Enter' && !running) startDebate(false);
+  });
+})();
 </script>
 </body>
 </html>
